@@ -1,0 +1,1 @@
+-- Foundation migration. Domain tables will be added in their respective implementation weeks.
