@@ -14,5 +14,7 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Ensure Maven wrapper is executable
+        run: chmod +x mvnw
       - name: Run backend tests
         run: ./mvnw -B test
