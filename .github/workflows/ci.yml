@@ -17,4 +17,7 @@ jobs:
       - name: Ensure Maven wrapper is executable
         run: chmod +x mvnw
       - name: Run backend tests
+        env:
+          # Chave pública exclusiva dos testes com banco descartável; nunca usar em produção.
+          TEST_JWT_SECRET: agenda-plus-ci-chave-exclusiva-de-testes-1234567890
         run: ./mvnw -B test

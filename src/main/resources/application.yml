@@ -3,6 +3,14 @@ spring:
     name: agenda-plus-backend
   profiles:
     default: dev
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:PT1H}
 
 ---
 

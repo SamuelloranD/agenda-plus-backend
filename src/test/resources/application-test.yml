@@ -1,0 +1,8 @@
+security:
+  jwt:
+    secret: ${TEST_JWT_SECRET:chave-exclusiva-para-testes-sem-uso-em-producao-123456}
+    expiration: PT1H
+
+logging:
+  level:
+    root: WARN

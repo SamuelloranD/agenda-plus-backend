@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-agenda_plus}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agenda_plus}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - agenda-plus-postgres:/var/lib/postgresql/data
     healthcheck:
