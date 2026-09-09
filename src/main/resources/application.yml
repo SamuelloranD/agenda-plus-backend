@@ -9,7 +9,7 @@ spring:
 
 security:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:dev-secret-not-for-production-please-change-me-32chars}
     expiration: ${JWT_EXPIRATION:PT1H}
 
 ---
@@ -19,7 +19,7 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/agenda_plus}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/agenda_plus}
     username: ${DB_USERNAME:agenda_plus}
     password: ${DB_PASSWORD:agenda_plus}
   jpa:
