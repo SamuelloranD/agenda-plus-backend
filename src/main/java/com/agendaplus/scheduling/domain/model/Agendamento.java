@@ -27,6 +27,14 @@ public final class Agendamento {
         this.status = StatusAgendamento.PENDENTE;
     }
 
+    public static Agendamento reidratar(UUID id, PeriodoAgendamento periodo, UUID profissionalId,
+                                        UUID clienteId, UUID servicoId, StatusAgendamento status) {
+        if (status == null) throw new IllegalArgumentException("Status do agendamento é obrigatório.");
+        var agendamento = new Agendamento(id, periodo, profissionalId, clienteId, servicoId);
+        agendamento.status = status;
+        return agendamento;
+    }
+
     public void confirmar() {
         exigirStatus(StatusAgendamento.PENDENTE);
         status = StatusAgendamento.CONFIRMADO;

@@ -99,4 +99,16 @@ class AgendamentoTest {
         assertThrows(CancelamentoNaoPermitidoException.class,
                 () -> agendamento.cancelar(inicio.minusHours(23)));
     }
+
+    @Test
+    void deveReidratarAgendamentoComStatusPersistido() {
+        var id = UUID.randomUUID();
+        var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));
+
+        var agendamento = Agendamento.reidratar(id, periodo, profissionalId, clienteId,
+                servicoId, StatusAgendamento.CANCELADO);
+
+        assertEquals(id, agendamento.getId());
+        assertEquals(StatusAgendamento.CANCELADO, agendamento.getStatus());
+    }
 }

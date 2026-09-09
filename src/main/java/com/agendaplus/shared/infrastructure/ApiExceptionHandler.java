@@ -3,6 +3,10 @@ package com.agendaplus.shared.infrastructure;
 import com.agendaplus.identity.domain.exception.EmailJaCadastradoException;
 
 import com.agendaplus.identity.application.exception.CredenciaisInvalidasException;
+import com.agendaplus.scheduling.domain.exception.AgendamentoNaoEncontradoException;
+import com.agendaplus.scheduling.domain.exception.CancelamentoNaoPermitidoException;
+import com.agendaplus.scheduling.domain.exception.HorarioIndisponivelException;
+import com.agendaplus.scheduling.domain.exception.TransicaoInvalidaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -11,6 +15,20 @@ import org.springframework.web.bind.annotation.*;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(AgendamentoNaoEncontradoException.class)
+    ProblemDetail agendamentoNaoEncontrado(AgendamentoNaoEncontradoException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(HorarioIndisponivelException.class)
+    ProblemDetail horarioIndisponivel(HorarioIndisponivelException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler({CancelamentoNaoPermitidoException.class, TransicaoInvalidaException.class})
+    ProblemDetail transicaoAgendamentoInvalida(RuntimeException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
     @ExceptionHandler(EmailJaCadastradoException.class)
     ProblemDetail emailDuplicado(EmailJaCadastradoException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
