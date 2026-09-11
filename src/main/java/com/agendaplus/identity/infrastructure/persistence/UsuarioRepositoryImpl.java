@@ -8,6 +8,8 @@ import com.agendaplus.identity.domain.repository.UsuarioRepository;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
+import com.agendaplus.identity.domain.model.Role;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,6 +34,11 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
     }
 
     @Override
+    public List<Usuario> listarPorRole(Role role) {
+        return repository.findAllByRole(role).stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
     public Usuario salvar(Usuario usuario) {
         try {
             return mapper.toDomain(repository.saveAndFlush(mapper.toEntity(usuario)));
@@ -46,4 +53,7 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
             throw exception;
         }
     }
+
+    @Override
+    public void excluir(UUID id) { repository.deleteById(id); }
 }

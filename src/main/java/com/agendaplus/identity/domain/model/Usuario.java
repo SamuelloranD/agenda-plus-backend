@@ -31,4 +31,8 @@ public final class Usuario {
     public Email getEmail() { return email; }
     public String getSenhaHash() { return senhaHash; }
     public Role getRole() { return role; }
+
+    public Usuario atualizarPerfil(String nome, Email email) {
+        return new Usuario(id, nome, email, senhaHash, role);
+    }
 }

@@ -2,6 +2,7 @@ package com.agendaplus.shared.infrastructure;
 
 import com.agendaplus.identity.domain.exception.EmailJaCadastradoException;
 import com.agendaplus.professionals.application.ProfissionalNaoEncontradoException;
+import com.agendaplus.identity.application.cliente.ClienteNaoEncontradoException;
 
 import com.agendaplus.identity.application.exception.CredenciaisInvalidasException;
 import com.agendaplus.scheduling.domain.exception.AgendamentoNaoEncontradoException;
@@ -18,6 +19,11 @@ import org.springframework.web.bind.annotation.*;
 public class ApiExceptionHandler {
     @ExceptionHandler(ProfissionalNaoEncontradoException.class)
     ProblemDetail profissionalNaoEncontrado(ProfissionalNaoEncontradoException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(ClienteNaoEncontradoException.class)
+    ProblemDetail clienteNaoEncontrado(ClienteNaoEncontradoException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
