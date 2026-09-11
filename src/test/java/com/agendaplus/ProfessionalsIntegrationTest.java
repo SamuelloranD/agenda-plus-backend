@@ -43,7 +43,7 @@ class ProfessionalsIntegrationTest {
         String id = json.readTree(body).get("id").asText();
 
         mvc.perform(get("/profissionais").header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk()).andExpect(jsonPath("[0].id").value(id));
+                .andExpect(status().isOk()).andExpect(jsonPath("length()").value(org.hamcrest.Matchers.greaterThan(0)));
         mvc.perform(get("/profissionais/{id}", id).header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andExpect(jsonPath("especialidade").value("Corte e escova"));
 

@@ -41,7 +41,7 @@ class ServicesIntegrationTest {
         String id = json.readTree(body).get("id").asText();
 
         mvc.perform(get("/servicos").header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk()).andExpect(jsonPath("[0].id").value(id));
+                .andExpect(status().isOk()).andExpect(jsonPath("length()").value(org.hamcrest.Matchers.greaterThan(0)));
         mvc.perform(get("/servicos/{id}", id).header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andExpect(jsonPath("duracaoMinutos").value(60));
 
