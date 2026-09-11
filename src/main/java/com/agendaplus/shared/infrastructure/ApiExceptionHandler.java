@@ -3,6 +3,7 @@ package com.agendaplus.shared.infrastructure;
 import com.agendaplus.identity.domain.exception.EmailJaCadastradoException;
 import com.agendaplus.professionals.application.ProfissionalNaoEncontradoException;
 import com.agendaplus.identity.application.cliente.ClienteNaoEncontradoException;
+import com.agendaplus.services.application.ServicoNaoEncontradoException;
 
 import com.agendaplus.identity.application.exception.CredenciaisInvalidasException;
 import com.agendaplus.scheduling.domain.exception.AgendamentoNaoEncontradoException;
@@ -24,6 +25,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ClienteNaoEncontradoException.class)
     ProblemDetail clienteNaoEncontrado(ClienteNaoEncontradoException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(ServicoNaoEncontradoException.class)
+    ProblemDetail servicoNaoEncontrado(ServicoNaoEncontradoException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
