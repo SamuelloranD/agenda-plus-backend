@@ -80,6 +80,20 @@ class PublicCatalogSecurityIntegrationTest {
                 .andExpect(status().isUnauthorized());
         mvc.perform(patch("/agendamentos/{id}/confirmar", UUID.randomUUID()))
                 .andExpect(status().isUnauthorized());
+        mvc.perform(get("/clientes"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/agendamentos"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(patch("/agendamentos/{id}/cancelar", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void mantémDescendentesDoCatalogoProtegidos() throws Exception {
+        mvc.perform(get("/servicos/{id}/detalhes", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/profissionais/{id}/dados-internos", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
     }
 
     private CatalogData catalogData() throws Exception {
