@@ -12,6 +12,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.time.DayOfWeek;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,7 +34,7 @@ class AvailabilityIntegrationTest {
         String adminToken = token("Admin", true);
         String clientEmail = UUID.randomUUID() + "@exemplo.com";
         String clientId = cadastrarCliente(clientEmail);
-        LocalDate data = LocalDate.of(2026, 9, 14);
+        LocalDate data = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 
         String professionalBody = mvc.perform(post("/profissionais").header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -59,8 +61,8 @@ class AvailabilityIntegrationTest {
                         .param("data", data.toString()).param("servicoId", serviceId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("length()").value(2))
-                .andExpect(jsonPath("[0].inicio").value("2026-09-14T09:00:00"))
-                .andExpect(jsonPath("[1].inicio").value("2026-09-14T11:00:00"));
+                .andExpect(jsonPath("[0].inicio").value(data + "T09:00:00"))
+                .andExpect(jsonPath("[1].inicio").value(data + "T11:00:00"));
     }
 
     private String cadastrarCliente(String email) throws Exception {
