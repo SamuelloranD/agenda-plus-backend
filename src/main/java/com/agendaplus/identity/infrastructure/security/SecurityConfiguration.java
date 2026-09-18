@@ -30,6 +30,7 @@ public class SecurityConfiguration {
                                 "/servicos", "/servicos/{id}",
                                 "/profissionais", "/profissionais/{id}",
                                 "/profissionais/{id}/horarios-disponiveis").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/agendamentos").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, exception) -> {
                     response.setStatus(401);

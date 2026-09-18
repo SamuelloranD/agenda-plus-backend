@@ -27,4 +27,31 @@ public interface SpringDataAgendamentoRepository extends JpaRepository<Agendamen
             """)
     Page<AgendamentoJpaEntity> listar(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim,
                                       @Param("profissionalId") UUID profissionalId, Pageable pageable);
+
+    @Query("""
+            select a from AgendamentoJpaEntity a
+            where a.clienteId = :clienteId
+              and (cast(:inicio as LocalDateTime) is null or a.periodoFim > :inicio)
+              and (cast(:fim as LocalDateTime) is null or a.periodoInicio < :fim)
+            order by
+              case when a.status in (PENDENTE, CONFIRMADO) and a.periodoInicio >= :agora then 0 else 1 end,
+              case when a.status in (PENDENTE, CONFIRMADO) and a.periodoInicio >= :agora then a.periodoInicio else null end asc,
+              case when a.status in (PENDENTE, CONFIRMADO) and a.periodoInicio >= :agora then null else a.periodoInicio end desc,
+              a.id asc
+            """)
+    List<AgendamentoJpaEntity> listarPorCliente(@Param("clienteId") UUID clienteId,
+                                                @Param("inicio") LocalDateTime inicio,
+                                                @Param("fim") LocalDateTime fim,
+                                                @Param("agora") LocalDateTime agora,
+                                                Pageable pageable);
+
+    @Query("""
+            select count(a) from AgendamentoJpaEntity a
+            where a.clienteId = :clienteId
+              and (cast(:inicio as LocalDateTime) is null or a.periodoFim > :inicio)
+              and (cast(:fim as LocalDateTime) is null or a.periodoInicio < :fim)
+            """)
+    long contarPorCliente(@Param("clienteId") UUID clienteId,
+                          @Param("inicio") LocalDateTime inicio,
+                          @Param("fim") LocalDateTime fim);
 }
