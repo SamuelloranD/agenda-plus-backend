@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
@@ -38,7 +39,13 @@ public class AgendamentoController {
 
     @PatchMapping("/{id}/cancelar")
     @Operation(summary = "Cancelar agendamento", description = "Cancela somente quando faltam pelo menos 24 horas para o início")
-    public AgendamentoResponse cancelar(@PathVariable UUID id) { return AgendamentoResponse.from(cancelar.executar(id)); }
+    public AgendamentoResponse cancelar(@PathVariable UUID id,
+                                         @AuthenticationPrincipal UUID solicitanteId,
+                                         Authentication authentication) {
+        boolean administrador = authentication.getAuthorities().stream()
+                .anyMatch(autoridade -> autoridade.getAuthority().equals("ROLE_ADMIN"));
+        return AgendamentoResponse.from(cancelar.executar(id, solicitanteId, administrador));
+    }
 
     @GetMapping
     @Operation(summary = "Listar agendamentos", description = "Lista agendamentos por período e, opcionalmente, por profissional")

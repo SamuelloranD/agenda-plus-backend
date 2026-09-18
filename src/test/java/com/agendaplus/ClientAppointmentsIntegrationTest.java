@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -98,7 +99,48 @@ class ClientAppointmentsIntegrationTest {
                 .andExpect(jsonPath("totalPaginas").value(0));
     }
 
-    private void criarAgendamento(Cliente cliente, LocalDateTime inicio) throws Exception {
+    @Test
+    void clienteProprietarioCancelaAgendamentoFuturo() throws Exception {
+        Cliente cliente = cliente("Cliente proprietario");
+        String agendamentoId = criarAgendamento(cliente, LocalDateTime.now().plusDays(3));
+
+        mvc.perform(patch("/agendamentos/{id}/cancelar", agendamentoId)
+                        .header("Authorization", "Bearer " + cliente.token()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("status").value("CANCELADO"));
+    }
+
+    @Test
+    void clienteNaoProprietarioNaoCancelaAgendamento() throws Exception {
+        Cliente proprietario = cliente("Cliente proprietario");
+        Cliente outroCliente = cliente("Outro cliente");
+        String agendamentoId = criarAgendamento(proprietario, LocalDateTime.now().plusDays(3));
+
+        mvc.perform(patch("/agendamentos/{id}/cancelar", agendamentoId)
+                        .header("Authorization", "Bearer " + outroCliente.token()))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(get("/agendamentos/meus")
+                        .header("Authorization", "Bearer " + proprietario.token()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("conteudo[?(@.id == '%s')].status", agendamentoId)
+                        .value(hasItem("PENDENTE")));
+    }
+
+    @Test
+    void administradorCancelaAgendamentoDeCliente() throws Exception {
+        Cliente cliente = cliente("Cliente");
+        Cliente administrador = administrador("Administrador");
+        String agendamentoId = criarAgendamento(cliente, LocalDateTime.now().plusDays(3));
+
+        mvc.perform(patch("/agendamentos/{id}/cancelar", agendamentoId)
+                        .header("Authorization", "Bearer " + administrador.token()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("status").value("CANCELADO"))
+                .andExpect(jsonPath("clienteId").value(cliente.id().toString()));
+    }
+
+    private String criarAgendamento(Cliente cliente, LocalDateTime inicio) throws Exception {
         var request = Map.of(
                 "inicio", inicio,
                 "fim", inicio.plusHours(1),
@@ -106,16 +148,26 @@ class ClientAppointmentsIntegrationTest {
                 "clienteId", cliente.id(),
                 "servicoId", UUID.randomUUID());
 
-        mvc.perform(post("/agendamentos")
+        String resposta = mvc.perform(post("/agendamentos")
                         .header("Authorization", "Bearer " + cliente.token())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsBytes(request)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return json.readTree(resposta).get("id").asText();
     }
 
     private Cliente cliente(String nome) throws Exception {
+        return conta(nome, "/auth/cadastro");
+    }
+
+    private Cliente administrador(String nome) throws Exception {
+        return conta(nome, "/auth/cadastro-negocio");
+    }
+
+    private Cliente conta(String nome, String rotaCadastro) throws Exception {
         String email = UUID.randomUUID() + "@exemplo.com";
-        String cadastro = mvc.perform(post("/auth/cadastro")
+        String cadastro = mvc.perform(post(rotaCadastro)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsBytes(Map.of(
                                 "nome", nome,
