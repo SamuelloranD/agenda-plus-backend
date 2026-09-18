@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -48,5 +49,16 @@ public class AgendamentoController {
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
         return listar.executar(dataInicio, dataFim, profissionalId, pagina, tamanho);
+    }
+
+    @GetMapping("/meus")
+    @Operation(summary = "Listar meus agendamentos", description = "Lista somente os agendamentos do cliente autenticado")
+    public PaginaAgendamentosResponse listarMeus(
+            @AuthenticationPrincipal UUID clienteId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int tamanho) {
+        return listar.executarParaCliente(clienteId, dataInicio, dataFim, pagina, tamanho);
     }
 }

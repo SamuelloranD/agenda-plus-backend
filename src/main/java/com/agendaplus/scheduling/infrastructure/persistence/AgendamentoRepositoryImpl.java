@@ -27,5 +27,13 @@ public class AgendamentoRepositoryImpl implements AgendamentoRepository {
     public long contar(LocalDateTime inicio, LocalDateTime fim, UUID profissionalId) {
         return repository.listar(inicio, fim, profissionalId, org.springframework.data.domain.Pageable.unpaged()).getTotalElements();
     }
+    public List<Agendamento> listarPorCliente(UUID clienteId, LocalDateTime inicio, LocalDateTime fim,
+                                              int pagina, int tamanho) {
+        return repository.listarPorCliente(clienteId, inicio, fim,
+                org.springframework.data.domain.PageRequest.of(pagina, tamanho)).stream().map(mapper::toDomain).toList();
+    }
+    public long contarPorCliente(UUID clienteId, LocalDateTime inicio, LocalDateTime fim) {
+        return repository.contarPorCliente(clienteId, inicio, fim);
+    }
     public Agendamento salvar(Agendamento agendamento) { return mapper.toDomain(repository.saveAndFlush(mapper.toEntity(agendamento))); }
 }
