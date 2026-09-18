@@ -2,6 +2,9 @@ package com.agendaplus;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.agendaplus.scheduling.domain.model.StatusAgendamento;
+import com.agendaplus.scheduling.infrastructure.persistence.AgendamentoJpaEntity;
+import com.agendaplus.scheduling.infrastructure.persistence.SpringDataAgendamentoRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.UUID;
@@ -32,6 +36,62 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ClientAppointmentsIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
+    @Autowired SpringDataAgendamentoRepository repository;
+    @Autowired Clock clock;
+
+    @Test
+    void clienteNaoPodeLerRegistrosDeOutroClientePelaListagemGenerica() throws Exception {
+        Cliente proprietario = cliente("Proprietario");
+        Cliente outro = cliente("Outro cliente");
+        Cliente admin = administrador("Administrador");
+        LocalDateTime inicio = LocalDateTime.now(clock).plusDays(5);
+        String id = criarAgendamento(proprietario, inicio);
+
+        mvc.perform(get("/agendamentos")
+                        .header("Authorization", "Bearer " + outro.token())
+                        .param("dataInicio", inicio.toLocalDate().toString())
+                        .param("dataFim", inicio.toLocalDate().toString()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/agendamentos")
+                        .header("Authorization", "Bearer " + admin.token())
+                        .param("dataInicio", inicio.toLocalDate().toString())
+                        .param("dataFim", inicio.toLocalDate().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("conteudo[*].id", hasItem(id)));
+    }
+
+    @Test
+    void ordenaProximosAntesDoHistoricoGlobalmenteComDesempateAntesDePaginar() throws Exception {
+        Cliente cliente = cliente("Cliente paginado");
+        LocalDateTime agora = LocalDateTime.now(clock).withNano(0);
+        // Deliberately insert out of order, including ties spanning page boundaries.
+        salvarRegistro(cliente, 8, agora.minusDays(5), StatusAgendamento.CONCLUIDO);
+        salvarRegistro(cliente, 2, agora.plusDays(2), StatusAgendamento.CONFIRMADO);
+        salvarRegistro(cliente, 7, agora.minusDays(1), StatusAgendamento.CONFIRMADO);
+        salvarRegistro(cliente, 1, agora.plusDays(2), StatusAgendamento.PENDENTE);
+        salvarRegistro(cliente, 6, agora.minusDays(1), StatusAgendamento.PENDENTE);
+        salvarRegistro(cliente, 3, agora.plusDays(3), StatusAgendamento.PENDENTE);
+        salvarRegistro(cliente, 5, agora.plusDays(8), StatusAgendamento.CONCLUIDO);
+        salvarRegistro(cliente, 4, agora.plusDays(9), StatusAgendamento.CANCELADO);
+        salvarRegistro(cliente("Outro cliente"), 9, agora.plusDays(1), StatusAgendamento.PENDENTE);
+
+        for (int pagina = 0; pagina < 4; pagina++) {
+            mvc.perform(get("/agendamentos/meus")
+                            .header("Authorization", "Bearer " + cliente.token())
+                            .param("pagina", String.valueOf(pagina)).param("tamanho", "2"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("conteudo", hasSize(2)))
+                    .andExpect(jsonPath("conteudo[0].id").value(new UUID(0, pagina * 2 + 1).toString()))
+                    .andExpect(jsonPath("conteudo[1].id").value(new UUID(0, pagina * 2 + 2).toString()))
+                    .andExpect(jsonPath("totalElementos").value(8))
+                    .andExpect(jsonPath("totalPaginas").value(4));
+        }
+    }
+
+    private void salvarRegistro(Cliente cliente, long id, LocalDateTime inicio, StatusAgendamento status) {
+        repository.saveAndFlush(new AgendamentoJpaEntity(new UUID(0, id), inicio, inicio.plusHours(1),
+                UUID.randomUUID(), cliente.id(), UUID.randomUUID(), status));
+    }
 
     @Test
     void clienteAutenticadoRecebeSomenteOsPropriosAgendamentos() throws Exception {

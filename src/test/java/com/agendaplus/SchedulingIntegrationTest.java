@@ -29,6 +29,7 @@ class SchedulingIntegrationTest {
     @Test
     void criaAgendamentoComSucessoEListaPorPeriodo() throws Exception {
         Cliente cliente = cliente();
+        Cliente admin = conta("/auth/cadastro-negocio");
         LocalDateTime inicio = LocalDateTime.now().plusDays(2).withSecond(0).withNano(0);
         var request = request(inicio, cliente.id());
 
@@ -36,8 +37,9 @@ class SchedulingIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(request)))
                 .andExpect(status().isCreated()).andExpect(jsonPath("status").value("PENDENTE"));
 
-        mvc.perform(get("/agendamentos").header("Authorization", "Bearer " + cliente.token())
-                        .param("dataInicio", inicio.toLocalDate().toString()).param("dataFim", inicio.toLocalDate().toString()))
+        mvc.perform(get("/agendamentos").header("Authorization", "Bearer " + admin.token())
+                        .param("dataInicio", inicio.toLocalDate().toString()).param("dataFim", inicio.toLocalDate().toString())
+                        .param("profissionalId", request.get("profissionalId").toString()))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElementos").value(1));
     }
 
@@ -92,8 +94,12 @@ class SchedulingIntegrationTest {
     private String id(String body) throws Exception { return json.readTree(body).get("id").asText(); }
 
     private Cliente cliente() throws Exception {
+        return conta("/auth/cadastro");
+    }
+
+    private Cliente conta(String rotaCadastro) throws Exception {
         String email = UUID.randomUUID() + "@exemplo.com";
-        String cadastro = mvc.perform(post("/auth/cadastro").contentType(MediaType.APPLICATION_JSON)
+        String cadastro = mvc.perform(post(rotaCadastro).contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsBytes(Map.of("nome", "Cliente", "email", email, "senha", "senha-segura"))))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         String body = mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
