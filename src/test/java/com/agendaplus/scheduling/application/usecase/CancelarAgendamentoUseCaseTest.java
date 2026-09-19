@@ -5,6 +5,7 @@ import com.agendaplus.scheduling.domain.model.Agendamento;
 import com.agendaplus.scheduling.domain.model.PeriodoAgendamento;
 import com.agendaplus.scheduling.domain.model.StatusAgendamento;
 import com.agendaplus.scheduling.domain.repository.AgendamentoRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -32,22 +33,58 @@ class CancelarAgendamentoUseCaseTest {
     })
     void aplicaLimiteDe24HorasComRelogioUtcParaClienteEAdmin(boolean admin, String agora, boolean permitido) {
         var repository = mock(AgendamentoRepository.class);
+        var publisher = mock(ApplicationEventPublisher.class);
         var inicio = LocalDateTime.of(2026, 9, 20, 14, 0);
         var agendamento = new Agendamento(UUID.randomUUID(), new PeriodoAgendamento(inicio, inicio.plusHours(1)),
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         when(repository.buscarPorId(agendamento.getId())).thenReturn(Optional.of(agendamento));
-        var useCase = new CancelarAgendamentoUseCase(repository, Clock.fixed(Instant.parse(agora), ZoneOffset.UTC));
+        var useCase = new CancelarAgendamentoUseCase(repository, Clock.fixed(Instant.parse(agora), ZoneOffset.UTC), publisher);
         var solicitante = admin ? UUID.randomUUID() : agendamento.getClienteId();
 
         if (permitido) {
             when(repository.salvar(agendamento)).thenReturn(agendamento);
             assertEquals(StatusAgendamento.CANCELADO, useCase.executar(agendamento.getId(), solicitante, admin).getStatus());
             verify(repository).salvar(agendamento);
+            verify(publisher).publishEvent(any(Object.class));
         } else {
             assertThrows(CancelamentoNaoPermitidoException.class,
                     () -> useCase.executar(agendamento.getId(), solicitante, admin));
             assertEquals(StatusAgendamento.PENDENTE, agendamento.getStatus());
             verify(repository, never()).salvar(any());
+            verifyNoInteractions(publisher);
         }
+    }
+
+    @org.junit.jupiter.api.Test
+    void naoPublicaEventoQuandoSolicitanteNaoEhDono() {
+        var repository = mock(AgendamentoRepository.class);
+        var publisher = mock(ApplicationEventPublisher.class);
+        var agendamento = new Agendamento(UUID.randomUUID(),
+                new PeriodoAgendamento(LocalDateTime.of(2026, 9, 25, 14, 0), LocalDateTime.of(2026, 9, 25, 15, 0)),
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        when(repository.buscarPorId(agendamento.getId())).thenReturn(Optional.of(agendamento));
+        var useCase = new CancelarAgendamentoUseCase(repository,
+                Clock.fixed(Instant.parse("2026-09-21T10:00:00Z"), ZoneOffset.UTC), publisher);
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> useCase.executar(agendamento.getId(), UUID.randomUUID(), false));
+        verifyNoInteractions(publisher);
+    }
+
+    @org.junit.jupiter.api.Test
+    void naoPublicaEventoQuandoTransicaoEhInvalida() {
+        var repository = mock(AgendamentoRepository.class);
+        var publisher = mock(ApplicationEventPublisher.class);
+        var agendamento = new Agendamento(UUID.randomUUID(),
+                new PeriodoAgendamento(LocalDateTime.of(2026, 9, 25, 14, 0), LocalDateTime.of(2026, 9, 25, 15, 0)),
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        agendamento.cancelar(LocalDateTime.of(2026, 9, 18, 10, 0));
+        when(repository.buscarPorId(agendamento.getId())).thenReturn(Optional.of(agendamento));
+        var useCase = new CancelarAgendamentoUseCase(repository,
+                Clock.fixed(Instant.parse("2026-09-21T10:00:00Z"), ZoneOffset.UTC), publisher);
+
+        assertThrows(com.agendaplus.scheduling.domain.exception.TransicaoInvalidaException.class,
+                () -> useCase.executar(agendamento.getId(), agendamento.getClienteId(), false));
+        verifyNoInteractions(publisher);
     }
 }
