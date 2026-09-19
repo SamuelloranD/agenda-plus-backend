@@ -41,6 +41,14 @@ class PeriodoAgendamentoTest {
         var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));
 
         assertFalse(periodo.conflitaCom(new PeriodoAgendamento(inicio.plusHours(1), inicio.plusHours(2))));
+        assertFalse(periodo.conflitaCom(new PeriodoAgendamento(inicio.minusHours(1), inicio)));
+    }
+
+    @Test
+    void deveRejeitarOutroPeriodoNulo() {
+        var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));
+
+        assertThrows(NullPointerException.class, () -> periodo.conflitaCom(null));
     }
 
     @Test
@@ -49,5 +57,12 @@ class PeriodoAgendamentoTest {
 
         assertTrue(periodo.dentroDaJanelaDeCancelamento(inicio.minusHours(23)));
         assertFalse(periodo.dentroDaJanelaDeCancelamento(inicio.minusHours(24)));
+    }
+
+    @Test
+    void deveRejeitarMomentoAtualNulo() {
+        var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));
+
+        assertThrows(IllegalArgumentException.class, () -> periodo.dentroDaJanelaDeCancelamento(null));
     }
 }

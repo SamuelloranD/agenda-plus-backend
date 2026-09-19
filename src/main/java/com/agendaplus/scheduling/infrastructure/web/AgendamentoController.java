@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.UUID;
+import com.agendaplus.scheduling.domain.model.StatusAgendamento;
 
 @RestController
 @RequestMapping("/agendamentos")
@@ -53,9 +54,10 @@ public class AgendamentoController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
             @RequestParam(required = false) UUID profissionalId,
+            @RequestParam(required = false) StatusAgendamento status,
             @RequestParam(defaultValue = "0") int pagina,
             @RequestParam(defaultValue = "20") int tamanho) {
-        return listar.executar(dataInicio, dataFim, profissionalId, pagina, tamanho);
+        return listar.executar(dataInicio, dataFim, profissionalId, status, pagina, tamanho);
     }
 
     @GetMapping("/meus")

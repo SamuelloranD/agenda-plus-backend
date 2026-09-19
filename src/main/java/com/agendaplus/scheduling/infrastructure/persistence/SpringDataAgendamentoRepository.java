@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import com.agendaplus.scheduling.domain.model.StatusAgendamento;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,10 +24,12 @@ public interface SpringDataAgendamentoRepository extends JpaRepository<Agendamen
             select a from AgendamentoJpaEntity a
             where a.periodoInicio < :fim and a.periodoFim > :inicio
               and (:profissionalId is null or a.profissionalId = :profissionalId)
+              and (:status is null or a.status = :status)
             order by a.periodoInicio
             """)
     Page<AgendamentoJpaEntity> listar(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim,
-                                      @Param("profissionalId") UUID profissionalId, Pageable pageable);
+                                      @Param("profissionalId") UUID profissionalId, @Param("status") StatusAgendamento status,
+                                      Pageable pageable);
 
     @Query("""
             select a from AgendamentoJpaEntity a

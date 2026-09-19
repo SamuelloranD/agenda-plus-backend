@@ -41,7 +41,11 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
     @Override
     public Usuario salvar(Usuario usuario) {
         try {
-            return mapper.toDomain(repository.saveAndFlush(mapper.toEntity(usuario)));
+            UsuarioJpaEntity entity = repository.findById(usuario.getId()).map(existing -> {
+                existing.atualizar(usuario.getNome(), usuario.getEmail().valor(), usuario.getSenhaHash(), usuario.getRole());
+                return existing;
+            }).orElseGet(() -> mapper.toEntity(usuario));
+            return mapper.toDomain(repository.saveAndFlush(entity));
         } catch (DataIntegrityViolationException exception) {
             // A constraint cobre cadastros concorrentes após a consulta do caso de uso.
             for (Throwable causa = exception; causa != null; causa = causa.getCause()) {

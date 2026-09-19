@@ -27,7 +27,7 @@ public class ServicoService {
     public List<Servico> listar() { return servicos.findAll().stream().sorted((a, b) -> a.getNome().compareToIgnoreCase(b.getNome())).toList(); }
 
     @Transactional(readOnly = true)
-    public Servico buscar(UUID id) { return servicos.findById(id).orElseThrow(() -> new IllegalArgumentException("Serviço não encontrado.")); }
+    public Servico buscar(UUID id) { return servicos.findById(id).orElseThrow(ServicoNaoEncontradoException::new); }
 
     @Transactional
     public Servico atualizar(UUID id, ServicoRequest request) {
@@ -38,7 +38,7 @@ public class ServicoService {
 
     @Transactional
     public void excluir(UUID id) {
-        if (!servicos.existsById(id)) throw new IllegalArgumentException("Serviço não encontrado.");
+        if (!servicos.existsById(id)) throw new ServicoNaoEncontradoException();
         servicos.deleteById(id);
     }
 

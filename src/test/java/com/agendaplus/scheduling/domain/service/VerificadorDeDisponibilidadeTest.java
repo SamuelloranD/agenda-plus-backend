@@ -52,4 +52,17 @@ class VerificadorDeDisponibilidadeTest {
         assertTrue(new VerificadorDeDisponibilidade().estaDisponivel(profissionalId,
                 new PeriodoAgendamento(inicio.plusMinutes(30), inicio.plusHours(2)), List.of(existente)));
     }
+
+    @Test
+    void deveRejeitarParametrosObrigatoriosAusentes() {
+        var verificador = new VerificadorDeDisponibilidade();
+        var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> verificador.estaDisponivel(null, periodo, List.of()));
+        assertThrows(IllegalArgumentException.class,
+                () -> verificador.estaDisponivel(profissionalId, null, List.of()));
+        assertThrows(IllegalArgumentException.class,
+                () -> verificador.estaDisponivel(profissionalId, periodo, null));
+    }
 }

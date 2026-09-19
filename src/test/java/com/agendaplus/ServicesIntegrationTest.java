@@ -65,6 +65,28 @@ class ServicesIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void retornaNotFoundAoBuscarServicoInexistente() throws Exception {
+        String token = token();
+
+        mvc.perform(get("/servicos/{id}", UUID.randomUUID())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("status").value(404))
+                .andExpect(jsonPath("detail").value("Serviço não encontrado."));
+    }
+
+    @Test
+    void retornaNotFoundAoExcluirServicoInexistente() throws Exception {
+        String token = token();
+
+        mvc.perform(delete("/servicos/{id}", UUID.randomUUID())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("status").value(404))
+                .andExpect(jsonPath("detail").value("Serviço não encontrado."));
+    }
+
     private String token() throws Exception {
         String email = UUID.randomUUID() + "@exemplo.com";
         mvc.perform(post("/auth/cadastro-negocio").contentType(MediaType.APPLICATION_JSON)

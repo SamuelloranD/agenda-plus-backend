@@ -19,4 +19,13 @@ class EmailTest {
     void rejeitaFormatoInvalido(String valor) {
         assertThatIllegalArgumentException().isThrownBy(() -> new Email(valor));
     }
+
+    @Test
+    void rejeitaEnderecosQueExcedemOsLimitesDeTamanho() {
+        var parteLocalCom65Caracteres = "a".repeat(65) + "@exemplo.com";
+        var enderecoCom255Caracteres = "a@" + "b".repeat(249) + ".com";
+
+        assertThatIllegalArgumentException().isThrownBy(() -> new Email(parteLocalCom65Caracteres));
+        assertThatIllegalArgumentException().isThrownBy(() -> new Email(enderecoCom255Caracteres));
+    }
 }
