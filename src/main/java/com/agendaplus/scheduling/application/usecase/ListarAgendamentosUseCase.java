@@ -3,6 +3,7 @@ package com.agendaplus.scheduling.application.usecase;
 import com.agendaplus.scheduling.application.dto.AgendamentoResponse;
 import com.agendaplus.scheduling.application.dto.PaginaAgendamentosResponse;
 import com.agendaplus.scheduling.domain.repository.AgendamentoRepository;
+import com.agendaplus.scheduling.domain.model.StatusAgendamento;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,13 +13,13 @@ import java.util.UUID;
 public class ListarAgendamentosUseCase {
     private final AgendamentoRepository repository;
     public ListarAgendamentosUseCase(AgendamentoRepository repository) { this.repository = repository; }
-    public PaginaAgendamentosResponse executar(LocalDate dataInicio, LocalDate dataFim, UUID profissionalId, int pagina, int tamanho) {
+    public PaginaAgendamentosResponse executar(LocalDate dataInicio, LocalDate dataFim, UUID profissionalId, StatusAgendamento status, int pagina, int tamanho) {
         if (dataInicio == null || dataFim == null || dataFim.isBefore(dataInicio)) throw new IllegalArgumentException("O período de consulta é inválido.");
         validarPaginacao(pagina, tamanho);
         LocalDateTime inicio = dataInicio.atStartOfDay();
         LocalDateTime fim = dataFim.plusDays(1).atTime(LocalTime.MIDNIGHT);
-        var itens = repository.listar(inicio, fim, profissionalId, pagina, tamanho).stream().map(AgendamentoResponse::from).toList();
-        long total = repository.contar(inicio, fim, profissionalId);
+        var itens = repository.listar(inicio, fim, profissionalId, status, pagina, tamanho).stream().map(AgendamentoResponse::from).toList();
+        long total = repository.contar(inicio, fim, profissionalId, status);
         return pagina(itens, pagina, tamanho, total);
     }
 

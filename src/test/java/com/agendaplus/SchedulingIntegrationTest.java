@@ -39,8 +39,59 @@ class SchedulingIntegrationTest {
 
         mvc.perform(get("/agendamentos").header("Authorization", "Bearer " + admin.token())
                         .param("dataInicio", inicio.toLocalDate().toString()).param("dataFim", inicio.toLocalDate().toString())
-                        .param("profissionalId", request.get("profissionalId").toString()))
+                        .param("profissionalId", request.get("profissionalId").toString()).param("status", "PENDENTE"))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElementos").value(1));
+    }
+
+    @Test
+    void filtraPorStatusNaPaginaENosMetadados() throws Exception {
+        Cliente cliente = cliente();
+        Cliente admin = conta("/auth/cadastro-negocio");
+        UUID profissionalId = UUID.randomUUID();
+        LocalDateTime inicio = LocalDateTime.now().plusDays(20)
+                .withHour(9).withMinute(0).withSecond(0).withNano(0);
+
+        String canceladoId = id(criar(cliente.token(), request(inicio, cliente.id(), profissionalId))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        criar(cliente.token(), request(inicio.plusHours(2), cliente.id(), profissionalId))
+                .andExpect(status().isCreated());
+        mvc.perform(patch("/agendamentos/{id}/cancelar", canceladoId)
+                        .header("Authorization", "Bearer " + cliente.token()))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/agendamentos").header("Authorization", "Bearer " + admin.token())
+                        .param("dataInicio", inicio.toLocalDate().toString())
+                        .param("dataFim", inicio.toLocalDate().toString())
+                        .param("profissionalId", profissionalId.toString())
+                        .param("status", "PENDENTE")
+                        .param("pagina", "0")
+                        .param("tamanho", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("conteudo.length()").value(1))
+                .andExpect(jsonPath("conteudo[0].status").value("PENDENTE"))
+                .andExpect(jsonPath("totalElementos").value(1))
+                .andExpect(jsonPath("totalPaginas").value(1));
+    }
+
+    @Test
+    void rejeitaFiltroDeStatusDesconhecido() throws Exception {
+        Cliente admin = conta("/auth/cadastro-negocio");
+        mvc.perform(get("/agendamentos").header("Authorization", "Bearer " + admin.token())
+                        .param("dataInicio", "2026-09-19")
+                        .param("dataFim", "2026-09-20")
+                        .param("status", "NAO_EXISTE"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("detail").value("Parâmetro inválido: status."));
+    }
+
+    @Test
+    void rejeitaPeriodoInvertido() throws Exception {
+        Cliente admin = conta("/auth/cadastro-negocio");
+        mvc.perform(get("/agendamentos").header("Authorization", "Bearer " + admin.token())
+                        .param("dataInicio", "2026-09-20")
+                        .param("dataFim", "2026-09-19"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("detail").value("O período de consulta é inválido."));
     }
 
     @Test
@@ -87,7 +138,11 @@ class SchedulingIntegrationTest {
     }
 
     private Map<String, Object> request(LocalDateTime inicio, UUID clienteId) {
-        return Map.of("inicio", inicio, "fim", inicio.plusHours(1), "profissionalId", UUID.randomUUID(),
+        return request(inicio, clienteId, UUID.randomUUID());
+    }
+
+    private Map<String, Object> request(LocalDateTime inicio, UUID clienteId, UUID profissionalId) {
+        return Map.of("inicio", inicio, "fim", inicio.plusHours(1), "profissionalId", profissionalId,
                 "clienteId", clienteId, "servicoId", UUID.randomUUID());
     }
 

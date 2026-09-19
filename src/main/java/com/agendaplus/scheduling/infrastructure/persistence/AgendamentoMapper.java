@@ -17,4 +17,9 @@ public class AgendamentoMapper {
                 new PeriodoAgendamento(entity.getPeriodoInicio(), entity.getPeriodoFim()),
                 entity.getProfissionalId(), entity.getClienteId(), entity.getServicoId(), entity.getStatus());
     }
+
+    public void atualizar(AgendamentoJpaEntity entity, Agendamento agendamento) {
+        entity.atualizar(agendamento.getPeriodo().getInicio(), agendamento.getPeriodo().getFim(),
+                agendamento.getProfissionalId(), agendamento.getClienteId(), agendamento.getServicoId(), agendamento.getStatus());
+    }
 }
