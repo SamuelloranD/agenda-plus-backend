@@ -10,6 +10,10 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
+import jakarta.persistence.Column;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 /**
  * O contexto professionals tem rigor DDD simplificado: a entidade JPA é usada diretamente
@@ -22,11 +26,25 @@ public class Profissional {
     private UUID id;
     private String nome;
     private String especialidade;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     @OneToMany(mappedBy = "profissional", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<HorarioTrabalho> horariosTrabalho = new ArrayList<>();
 
     protected Profissional() {}
+
+    @PrePersist
+    void onCreate() {
+        Instant now = Instant.now();
+        if (createdAt == null) createdAt = now;
+        if (updatedAt == null) updatedAt = now;
+    }
+
+    @PreUpdate
+    void onUpdate() { updatedAt = Instant.now(); }
 
     public Profissional(UUID id, String nome, String especialidade) {
         this.id = id;
@@ -58,4 +76,6 @@ public class Profissional {
     public String getNome() { return nome; }
     public String getEspecialidade() { return especialidade; }
     public List<HorarioTrabalho> getHorariosTrabalho() { return List.copyOf(horariosTrabalho); }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }

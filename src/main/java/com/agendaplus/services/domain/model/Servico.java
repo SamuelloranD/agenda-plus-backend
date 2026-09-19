@@ -9,6 +9,9 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.UUID;
+import java.time.Instant;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 @Entity
 @Table(name = "servicos")
@@ -22,8 +25,22 @@ public class Servico {
     private BigDecimal precoValor;
     @Column(name = "preco_moeda", length = 3)
     private String precoMoeda;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     protected Servico() {}
+
+    @PrePersist
+    void onCreate() {
+        Instant now = Instant.now();
+        if (createdAt == null) createdAt = now;
+        if (updatedAt == null) updatedAt = now;
+    }
+
+    @PreUpdate
+    void onUpdate() { updatedAt = Instant.now(); }
 
     public Servico(UUID id, String nome, int duracaoMinutos, Dinheiro preco) {
         this.id = id;
@@ -46,4 +63,6 @@ public class Servico {
     public String getNome() { return nome; }
     public int getDuracaoMinutos() { return duracaoMinutos; }
     public Dinheiro getPreco() { return new Dinheiro(precoValor, Currency.getInstance(precoMoeda)); }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }
