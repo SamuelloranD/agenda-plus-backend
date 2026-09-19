@@ -40,4 +40,17 @@ class DinheiroTest {
         assertThat(primeiro).isEqualTo(segundo);
         assertThat(primeiro.getMoeda()).isEqualTo(BRL);
     }
+
+    @Test
+    void distingueValorMoedaETipoNoContratoDeIgualdade() {
+        var dinheiro = new Dinheiro(new BigDecimal("10.00"), BRL);
+        var equivalente = new Dinheiro(new BigDecimal("10"), BRL);
+
+        assertThat(dinheiro.equals(dinheiro)).isTrue();
+        assertThat(dinheiro.equals(null)).isFalse();
+        assertThat(dinheiro.equals("10.00 BRL")).isFalse();
+        assertThat(dinheiro).isNotEqualTo(new Dinheiro(new BigDecimal("11.00"), BRL));
+        assertThat(dinheiro).isNotEqualTo(new Dinheiro(new BigDecimal("10.00"), Currency.getInstance("USD")));
+        assertThat(dinheiro.hashCode()).isEqualTo(equivalente.hashCode());
+    }
 }

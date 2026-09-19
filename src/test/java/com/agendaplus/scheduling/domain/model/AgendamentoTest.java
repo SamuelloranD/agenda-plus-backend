@@ -45,6 +45,16 @@ class AgendamentoTest {
     }
 
     @Test
+    void devePermitirCancelarAgendamentoConfirmadoForaDaJanela() {
+        var agendamento = novoAgendamento();
+        agendamento.confirmar();
+
+        agendamento.cancelar(inicio.minusHours(24));
+
+        assertEquals(StatusAgendamento.CANCELADO, agendamento.getStatus());
+    }
+
+    @Test
     void devePermitirConcluirAgendamentoConfirmado() {
         var agendamento = novoAgendamento();
         agendamento.confirmar();
@@ -110,5 +120,30 @@ class AgendamentoTest {
 
         assertEquals(id, agendamento.getId());
         assertEquals(StatusAgendamento.CANCELADO, agendamento.getStatus());
+    }
+
+    @Test
+    void deveRejeitarReferenciasObrigatoriasAusentes() {
+        var id = UUID.randomUUID();
+        var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> new Agendamento(null, periodo, profissionalId, clienteId, servicoId));
+        assertThrows(IllegalArgumentException.class,
+                () -> new Agendamento(id, null, profissionalId, clienteId, servicoId));
+        assertThrows(IllegalArgumentException.class,
+                () -> new Agendamento(id, periodo, null, clienteId, servicoId));
+        assertThrows(IllegalArgumentException.class,
+                () -> new Agendamento(id, periodo, profissionalId, null, servicoId));
+        assertThrows(IllegalArgumentException.class,
+                () -> new Agendamento(id, periodo, profissionalId, clienteId, null));
+    }
+
+    @Test
+    void deveRejeitarReidratacaoSemStatus() {
+        var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));
+
+        assertThrows(IllegalArgumentException.class, () -> Agendamento.reidratar(
+                UUID.randomUUID(), periodo, profissionalId, clienteId, servicoId, null));
     }
 }
