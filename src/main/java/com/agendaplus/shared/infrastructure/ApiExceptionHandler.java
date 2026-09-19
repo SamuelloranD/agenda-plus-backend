@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.*;
 
 @RestControllerAdvice
@@ -55,6 +57,17 @@ public class ApiExceptionHandler {
     @ExceptionHandler(CredenciaisInvalidasException.class)
     ProblemDetail credenciaisInvalidas(CredenciaisInvalidasException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ProblemDetail acessoNegado(AccessDeniedException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ProblemDetail parametroInvalido(MethodArgumentTypeMismatchException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Parâmetro inválido: " + exception.getName() + ".");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
