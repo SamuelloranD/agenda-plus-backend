@@ -7,6 +7,9 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 
+server:
+  port: ${PORT:8080}
+
 security:
   jwt:
     secret: ${JWT_SECRET:dev-secret-not-for-production-please-change-me-32chars}
