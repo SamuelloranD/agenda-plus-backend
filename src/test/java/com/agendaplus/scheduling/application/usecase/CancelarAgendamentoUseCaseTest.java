@@ -24,14 +24,11 @@ import static org.mockito.Mockito.*;
 class CancelarAgendamentoUseCaseTest {
     @ParameterizedTest
     @CsvSource({
-            "false, 2026-09-19T13:59:59.999Z, true",
-            "false, 2026-09-19T14:00:00.000Z, true",
-            "false, 2026-09-19T14:00:00.001Z, false",
-            "true, 2026-09-19T13:59:59.999Z, true",
-            "true, 2026-09-19T14:00:00.000Z, true",
-            "true, 2026-09-19T14:00:00.001Z, false"
+            "2026-09-19T13:59:59.999Z, true",
+            "2026-09-19T14:00:00.000Z, true",
+            "2026-09-19T14:00:00.001Z, false"
     })
-    void aplicaLimiteDe24HorasComRelogioUtcParaClienteEAdmin(boolean admin, String agora, boolean permitido) {
+    void aplicaLimiteDe24HorasParaCliente(String agora, boolean permitido) {
         var repository = mock(AgendamentoRepository.class);
         var publisher = mock(ApplicationEventPublisher.class);
         var inicio = LocalDateTime.of(2026, 9, 20, 14, 0);
@@ -39,20 +36,39 @@ class CancelarAgendamentoUseCaseTest {
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         when(repository.buscarPorId(agendamento.getId())).thenReturn(Optional.of(agendamento));
         var useCase = new CancelarAgendamentoUseCase(repository, Clock.fixed(Instant.parse(agora), ZoneOffset.UTC), publisher);
-        var solicitante = admin ? UUID.randomUUID() : agendamento.getClienteId();
+        var solicitante = agendamento.getClienteId();
 
         if (permitido) {
             when(repository.salvar(agendamento)).thenReturn(agendamento);
-            assertEquals(StatusAgendamento.CANCELADO, useCase.executar(agendamento.getId(), solicitante, admin).getStatus());
+            assertEquals(StatusAgendamento.CANCELADO, useCase.executar(agendamento.getId(), solicitante, false).getStatus());
             verify(repository).salvar(agendamento);
             verify(publisher).publishEvent(any(Object.class));
         } else {
             assertThrows(CancelamentoNaoPermitidoException.class,
-                    () -> useCase.executar(agendamento.getId(), solicitante, admin));
+                    () -> useCase.executar(agendamento.getId(), solicitante, false));
             assertEquals(StatusAgendamento.PENDENTE, agendamento.getStatus());
             verify(repository, never()).salvar(any());
             verifyNoInteractions(publisher);
         }
+    }
+
+    @org.junit.jupiter.api.Test
+    void administradorCancelaDentroDaJanelaEPublicaMesmoEvento() {
+        var repository = mock(AgendamentoRepository.class);
+        var publisher = mock(ApplicationEventPublisher.class);
+        var agendamento = new Agendamento(UUID.randomUUID(),
+                new PeriodoAgendamento(LocalDateTime.of(2026, 9, 20, 14, 0), LocalDateTime.of(2026, 9, 20, 15, 0)),
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        when(repository.buscarPorId(agendamento.getId())).thenReturn(Optional.of(agendamento));
+        when(repository.salvar(agendamento)).thenReturn(agendamento);
+        var useCase = new CancelarAgendamentoUseCase(repository,
+                Clock.fixed(Instant.parse("2026-09-20T10:00:00Z"), ZoneOffset.UTC), publisher);
+
+        var resultado = useCase.executar(agendamento.getId(), UUID.randomUUID(), true);
+
+        assertEquals(StatusAgendamento.CANCELADO, resultado.getStatus());
+        verify(repository).salvar(agendamento);
+        verify(publisher).publishEvent(any(com.agendaplus.scheduling.domain.event.AgendamentoCancelado.class));
     }
 
     @org.junit.jupiter.api.Test

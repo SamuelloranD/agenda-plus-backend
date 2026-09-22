@@ -23,7 +23,11 @@ public class CancelarAgendamentoUseCase {
         if (!administrador && !a.getClienteId().equals(solicitanteId)) {
             throw new AccessDeniedException("O cliente autenticado não pode cancelar este agendamento.");
         }
-        a.cancelar(LocalDateTime.now(clock));
+        if (administrador) {
+            a.cancelarSemJanelaDeAntecedencia();
+        } else {
+            a.cancelar(LocalDateTime.now(clock));
+        }
         Agendamento salvo = repository.salvar(a);
         eventPublisher.publishEvent(new AgendamentoCancelado(salvo.getId(), salvo.getProfissionalId(), salvo.getClienteId(),
                 salvo.getServicoId(), salvo.getPeriodo()));
