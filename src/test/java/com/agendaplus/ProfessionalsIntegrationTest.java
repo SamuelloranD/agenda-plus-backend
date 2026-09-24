@@ -58,6 +58,34 @@ class ProfessionalsIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void atualizaDadosSemDuplicarHorariosDeTrabalhoExistentes() throws Exception {
+        String token = token();
+        var horarios = List.of(Map.of("diaSemana", "MONDAY", "inicio", "09:00", "fim", "18:00"));
+        var create = Map.of(
+                "nome", "Ana Silva",
+                "especialidade", "Corte e escova",
+                "horariosTrabalho", horarios);
+
+        String body = mvc.perform(post("/profissionais").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(create)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String id = json.readTree(body).get("id").asText();
+
+        var update = Map.of(
+                "nome", "Ana Atualizada",
+                "especialidade", "Corte e escova",
+                "horariosTrabalho", horarios);
+
+        mvc.perform(put("/profissionais/{id}", id).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(update)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("nome").value("Ana Atualizada"))
+                .andExpect(jsonPath("horariosTrabalho.length()").value(1))
+                .andExpect(jsonPath("horariosTrabalho[0].inicio").value("09:00:00"));
+    }
+
     private String token() throws Exception {
         String email = UUID.randomUUID() + "@exemplo.com";
         mvc.perform(post("/auth/cadastro-negocio").contentType(MediaType.APPLICATION_JSON)

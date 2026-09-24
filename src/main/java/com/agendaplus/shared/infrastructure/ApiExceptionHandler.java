@@ -12,6 +12,7 @@ import com.agendaplus.scheduling.domain.exception.HorarioIndisponivelException;
 import com.agendaplus.scheduling.domain.exception.TransicaoInvalidaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.security.access.AccessDeniedException;
@@ -52,6 +53,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(EmailJaCadastradoException.class)
     ProblemDetail emailDuplicado(EmailJaCadastradoException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail conflitoDePersistencia(DataIntegrityViolationException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Não foi possível salvar os dados porque eles entram em conflito com um registro existente.");
     }
 
     @ExceptionHandler(CredenciaisInvalidasException.class)

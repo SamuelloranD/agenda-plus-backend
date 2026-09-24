@@ -40,6 +40,13 @@ public class HorarioTrabalho {
 
     void associar(Profissional profissional) { this.profissional = profissional; }
 
+    void atualizarFim(LocalTime fim) {
+        if (fim == null || !fim.isAfter(inicio)) {
+            throw new IllegalArgumentException("O fim deve ser posterior ao início.");
+        }
+        this.fim = fim;
+    }
+
     public UUID getId() { return id; }
     public DayOfWeek getDiaSemana() { return diaSemana; }
     public LocalTime getInicio() { return inicio; }
