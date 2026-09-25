@@ -111,6 +111,24 @@ class AgendamentoTest {
     }
 
     @Test
+    void devePermitirCancelamentoSemJanelaDentroDas24Horas() {
+        var agendamento = novoAgendamento();
+
+        agendamento.cancelarSemJanelaDeAntecedencia();
+
+        assertEquals(StatusAgendamento.CANCELADO, agendamento.getStatus());
+    }
+
+    @Test
+    void deveRejeitarCancelamentoSemJanelaDeAgendamentoConcluido() {
+        var agendamento = novoAgendamento();
+        agendamento.confirmar();
+        agendamento.concluir();
+
+        assertThrows(TransicaoInvalidaException.class, agendamento::cancelarSemJanelaDeAntecedencia);
+    }
+
+    @Test
     void deveReidratarAgendamentoComStatusPersistido() {
         var id = UUID.randomUUID();
         var periodo = new PeriodoAgendamento(inicio, inicio.plusHours(1));

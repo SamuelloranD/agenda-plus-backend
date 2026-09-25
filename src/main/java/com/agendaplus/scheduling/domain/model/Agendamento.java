@@ -44,10 +44,18 @@ public final class Agendamento {
         if (periodo.dentroDaJanelaDeCancelamento(agora)) {
             throw new CancelamentoNaoPermitidoException();
         }
+        cancelarSemJanelaDeAntecedencia();
+    }
+
+    public void cancelarSemJanelaDeAntecedencia() {
+        exigirStatusCancelavel();
+        status = StatusAgendamento.CANCELADO;
+    }
+
+    private void exigirStatusCancelavel() {
         if (status != StatusAgendamento.PENDENTE && status != StatusAgendamento.CONFIRMADO) {
             throw new TransicaoInvalidaException("Apenas agendamentos pendentes ou confirmados podem ser cancelados.");
         }
-        status = StatusAgendamento.CANCELADO;
     }
 
     public void concluir() {

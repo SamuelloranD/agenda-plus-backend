@@ -43,4 +43,12 @@ class HorarioTrabalhoTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new HorarioTrabalho(ID, DayOfWeek.MONDAY, INICIO, INICIO.minusMinutes(1)));
     }
+
+    @Test
+    void rejeitaNovoFimInvalidoAoAtualizarFaixa() {
+        var horario = new HorarioTrabalho(ID, DayOfWeek.MONDAY, INICIO, FIM);
+
+        assertThatIllegalArgumentException().isThrownBy(() -> horario.atualizarFim(null));
+        assertThatIllegalArgumentException().isThrownBy(() -> horario.atualizarFim(INICIO));
+    }
 }

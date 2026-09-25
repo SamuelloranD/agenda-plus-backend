@@ -58,6 +58,32 @@ class ProfissionalTest {
     }
 
     @Test
+    void atualizaFimDaFaixaExistenteSemTrocarSuaIdentidade() {
+        var profissional = new Profissional(ID, "Ana", "Corte");
+        var faixaExistente = horario(DayOfWeek.MONDAY);
+        profissional.substituirHorarios(List.of(faixaExistente));
+        var novaFaixa = new HorarioTrabalho(UUID.randomUUID(), DayOfWeek.MONDAY,
+                LocalTime.of(9, 0), LocalTime.of(18, 0));
+
+        profissional.atualizarHorarios(List.of(novaFaixa));
+
+        assertThat(profissional.getHorariosTrabalho()).containsExactly(faixaExistente);
+        assertThat(faixaExistente.getFim()).isEqualTo(LocalTime.of(18, 0));
+    }
+
+    @Test
+    void removeFaixasAusentesEAdicionaFaixasNovasAoAtualizar() {
+        var profissional = new Profissional(ID, "Ana", "Corte");
+        profissional.substituirHorarios(List.of(horario(DayOfWeek.MONDAY)));
+        var novaFaixa = new HorarioTrabalho(UUID.randomUUID(), DayOfWeek.TUESDAY,
+                LocalTime.of(10, 0), LocalTime.of(14, 0));
+
+        profissional.atualizarHorarios(List.of(novaFaixa));
+
+        assertThat(profissional.getHorariosTrabalho()).containsExactly(novaFaixa);
+    }
+
+    @Test
     void preservaCriacaoAoReaplicarCallbackEAtualizaModificacao() {
         var profissional = new Profissional(ID, "Ana", "Corte");
 

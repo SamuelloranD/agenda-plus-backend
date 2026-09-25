@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.time.Instant;
+import java.util.Set;
+import java.util.stream.Collectors;
 import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -65,6 +67,29 @@ public class Profissional {
     public void substituirHorarios(List<HorarioTrabalho> horarios) {
         horariosTrabalho.clear();
         horarios.forEach(this::adicionarHorario);
+    }
+
+    public void atualizarHorarios(List<HorarioTrabalho> horarios) {
+        Set<String> faixasRecebidas = horarios.stream()
+                .map(this::chaveFaixa)
+                .collect(Collectors.toSet());
+
+        horariosTrabalho.removeIf(horario -> !faixasRecebidas.contains(chaveFaixa(horario)));
+
+        horarios.forEach(novoHorario -> horariosTrabalho.stream()
+                .filter(horario -> mesmaFaixa(horario, novoHorario))
+                .findFirst()
+                .ifPresentOrElse(
+                        horario -> horario.atualizarFim(novoHorario.getFim()),
+                        () -> adicionarHorario(novoHorario)));
+    }
+
+    private boolean mesmaFaixa(HorarioTrabalho primeiro, HorarioTrabalho segundo) {
+        return chaveFaixa(primeiro).equals(chaveFaixa(segundo));
+    }
+
+    private String chaveFaixa(HorarioTrabalho horario) {
+        return horario.getDiaSemana() + "|" + horario.getInicio();
     }
 
     private void adicionarHorario(HorarioTrabalho horario) {

@@ -118,6 +118,20 @@ class SchedulingIntegrationTest {
     }
 
     @Test
+    void administradorPodeCancelarDentroDaJanelaDe24Horas() throws Exception {
+        Cliente cliente = cliente();
+        Cliente admin = conta("/auth/cadastro-negocio");
+        LocalDateTime dentro = LocalDateTime.now().plusHours(12).withSecond(0).withNano(0);
+        String id = id(criar(cliente.token(), request(dentro, cliente.id()))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+
+        mvc.perform(patch("/agendamentos/{id}/cancelar", id)
+                        .header("Authorization", "Bearer " + admin.token()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("status").value("CANCELADO"));
+    }
+
+    @Test
     void rejeitaCancelamentoDeStatusNaoCancelavel() throws Exception {
         Cliente cliente = cliente();
         LocalDateTime inicio = LocalDateTime.now().plusDays(3).withSecond(0).withNano(0);

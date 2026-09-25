@@ -37,7 +37,7 @@ public class ProfissionalService {
         request.validarHorarios();
         var profissional = buscar(id);
         profissional.atualizarDados(request.nome(), request.especialidade());
-        profissional.substituirHorarios(criarHorarios(request.horariosTrabalho()));
+        profissional.atualizarHorarios(criarHorarios(request.horariosTrabalho()));
         return profissionais.saveAndFlush(profissional);
     }
 
