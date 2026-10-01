@@ -35,7 +35,19 @@ function Invoke-JsonApi {
         ContentType = "application/json"
     }
     if ($null -ne $json) { $params.Body = $json }
-    Invoke-RestMethod @params
+    try {
+        Invoke-RestMethod @params
+    } catch {
+        $response = $_.Exception.Response
+        $status = if ($response) { [int]$response.StatusCode } else { "desconhecido" }
+        $body = if ($response) {
+            $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+            try { $reader.ReadToEnd() } finally { $reader.Dispose() }
+        } else {
+            $_.Exception.Message
+        }
+        throw "API $Method $Path retornou HTTP $status. Resposta: $body"
+    }
 }
 
 function Wait-ForApi {
@@ -55,14 +67,21 @@ function Wait-ForApi {
 function Ensure-Account {
     param([string] $Path, [string] $Name, [string] $Email, [string] $Password)
     try {
-        Invoke-JsonApi -Method Post -Path $Path -Body @{
+        $account = Invoke-JsonApi -Method Post -Path $Path -Body @{
             nome = $Name
             email = $Email
             senha = $Password
-        } | Out-Null
+        }
         Write-Host "Conta criada: $Email"
+        return $account
     } catch {
-        $status = $_.Exception.Response.StatusCode.value__
+        $status = if ($_.Exception.Response) {
+            $_.Exception.Response.StatusCode.value__
+        } elseif ($_.Exception.Message -match "HTTP 409") {
+            409
+        } else {
+            $null
+        }
         if ($status -ne 409) { throw }
         Write-Host "Conta já existente: $Email"
     }
@@ -83,27 +102,43 @@ Ensure-Account -Path "/auth/cadastro-negocio" -Name "Demonstração Agenda+" -Em
 Ensure-Account -Path "/auth/cadastro" -Name "Cliente Demonstração" -Email $ClientEmail -Password $ClientPassword
 
 $adminToken = Login -Email $AdminEmail -Password $AdminPassword
-$client = Invoke-JsonApi -Method Post -Path "/auth/login" -Body @{
-    email = $ClientEmail
-    senha = $ClientPassword
+$clientAccount = @(Invoke-JsonApi -Method Get -Path "/clientes" -Token $adminToken |
+    Where-Object { $_.email -eq $ClientEmail } |
+    Select-Object -First 1)
+if ($clientAccount.Count -eq 0) {
+    throw "Nao foi possivel localizar o cliente $ClientEmail."
+}
+$clientAccount = $clientAccount[0]
+
+$professional = @(Invoke-JsonApi -Method Get -Path "/profissionais" |
+    Select-Object -First 1)
+if ($professional.Count -eq 0) {
+    $professional = Invoke-JsonApi -Method Post -Path "/profissionais" -Token $adminToken -Body @{
+        nome = "Marina Costa"
+        especialidade = "Cortes e acabamento"
+        horariosTrabalho = @(
+            @{ diaSemana = "MONDAY"; inicio = "08:00"; fim = "18:00" },
+            @{ diaSemana = "TUESDAY"; inicio = "08:00"; fim = "18:00" },
+            @{ diaSemana = "WEDNESDAY"; inicio = "08:00"; fim = "18:00" },
+            @{ diaSemana = "THURSDAY"; inicio = "08:00"; fim = "18:00" },
+            @{ diaSemana = "FRIDAY"; inicio = "08:00"; fim = "18:00" }
+        )
+    }
+} else {
+    $professional = $professional[0]
+    Write-Host "Profissional existente reutilizado."
 }
 
-$professional = Invoke-JsonApi -Method Post -Path "/profissionais" -Token $adminToken -Body @{
-    nome = "Marina Costa"
-    especialidade = "Cortes e acabamento"
-    horariosTrabalho = @(
-        @{ diaSemana = "MONDAY"; inicio = "08:00"; fim = "18:00" },
-        @{ diaSemana = "TUESDAY"; inicio = "08:00"; fim = "18:00" },
-        @{ diaSemana = "WEDNESDAY"; inicio = "08:00"; fim = "18:00" },
-        @{ diaSemana = "THURSDAY"; inicio = "08:00"; fim = "18:00" },
-        @{ diaSemana = "FRIDAY"; inicio = "08:00"; fim = "18:00" }
-    )
-}
-
-$service = Invoke-JsonApi -Method Post -Path "/servicos" -Token $adminToken -Body @{
+$existingServices = @(Invoke-JsonApi -Method Get -Path "/servicos" | Select-Object -First 1)
+if ($existingServices.Count -gt 0) {
+    $service = $existingServices[0]
+    Write-Host "Servico existente reutilizado."
+} else {
+    $service = Invoke-JsonApi -Method Post -Path "/servicos" -Token $adminToken -Body @{
     nome = "Corte clássico"
     duracaoMinutos = 45
     preco = @{ valor = 65.00; moeda = "BRL" }
+    }
 }
 
 $nextMonday = [DateTime]::Today.AddDays((8 - [int][DateTime]::Today.DayOfWeek) % 7)
@@ -120,7 +155,7 @@ foreach ($start in $slots) {
         inicio = $start.ToString("yyyy-MM-ddTHH:mm:ss")
         fim = $finish.ToString("yyyy-MM-ddTHH:mm:ss")
         profissionalId = $professional.id
-        clienteId = $client.id
+        clienteId = $clientAccount.id
         servicoId = $service.id
     } | Out-Null
 }
@@ -128,4 +163,4 @@ foreach ($start in $slots) {
 Write-Host "Demonstração recriada com sucesso."
 Write-Host "Profissional: $($professional.id)"
 Write-Host "Serviço: $($service.id)"
-Write-Host "Cliente: $($client.id)"
+Write-Host "Cliente: $($clientAccount.id)"
