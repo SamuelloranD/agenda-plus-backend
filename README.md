@@ -2,14 +2,14 @@
 
 API REST do Agenda+, uma plataforma de gestão de estúdios e casas de ofício. O backend centraliza autenticação, catálogo de serviços e profissionais, disponibilidade de horários e agendamentos.
 
-## Produção
+## Demonstração online
 
 - API: <https://agenda-plus-api-2nm8.onrender.com>
 - Swagger UI: <https://agenda-plus-api-2nm8.onrender.com/swagger-ui/index.html>
 - OpenAPI: <https://agenda-plus-api-2nm8.onrender.com/v3/api-docs>
 - Frontend: <https://agenda-plus-frontend-pearl.vercel.app>
 
-As URLs de produção não incluem credenciais. Use variáveis de ambiente no Render para os segredos do banco e do JWT.
+Além do desenvolvimento local, o projeto foi publicado com uma API online e documentação Swagger acessível para demonstração.
 
 ## Funcionalidades
 
@@ -125,13 +125,13 @@ Endpoints protegidos retornam `401 Unauthorized` quando não recebem um token JW
 
 | Variável | Obrigatória em produção | Descrição |
 | --- | --- | --- |
-| `DB_URL` | Sim | URL JDBC do PostgreSQL. No Render, use a Internal Database URL com o prefixo `jdbc:postgresql://`. |
+| `DB_URL` | Sim | URL JDBC do PostgreSQL. |
 | `DB_USERNAME` | Sim | Usuário do PostgreSQL. |
 | `DB_PASSWORD` | Sim | Senha do PostgreSQL, nunca a senha da conta do Render. |
 | `JWT_SECRET` | Sim | Segredo com pelo menos 32 caracteres, exclusivo da implantação. |
 | `JWT_EXPIRATION` | Não | Duração do token no formato ISO-8601; padrão `PT1H`. |
 | `CORS_ALLOWED_ORIGINS` | Recomendada | Origens separadas por vírgula. Exemplo: `https://agenda-plus-frontend-pearl.vercel.app`. |
-| `PORT` | Fornecida pela plataforma | Porta HTTP usada pelo Render. Localmente o padrão é `8080`. |
+| `PORT` | Não | Porta HTTP da aplicação; padrão `8080`. |
 
 Nunca versione senhas reais, tokens, URLs com credenciais ou arquivos `.env`. O `.env.example` deve conter apenas valores fictícios.
 
@@ -244,19 +244,9 @@ No Bash, substitua a crase final de cada linha por `\`.
 
 O serviço de backend no `docker-compose.yml` está comentado para manter o fluxo local simples. Ele pode ser habilitado quando for necessário subir a aplicação e o banco na mesma rede Docker; nesse cenário, a URL do banco deve usar o hostname `postgres` e a porta interna `5432`.
 
-## Deploy no Render
+## Publicação
 
-O serviço de produção usa o Dockerfile da raiz e a branch `master`.
-
-1. Crie um PostgreSQL no Render.
-2. Crie um Web Service conectado ao repositório `agenda-plus-backend`.
-3. Selecione runtime `Docker`, região compatível com o banco e a branch `master`.
-4. Adicione as variáveis `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `JWT_EXPIRATION` e `CORS_ALLOWED_ORIGINS`.
-5. Em `DB_URL`, use a Internal Database URL do banco do Render convertida para JDBC: `jdbc:postgresql://host:5432/database`.
-6. Use a senha exibida na seção de credenciais do banco para `DB_PASSWORD`; ela não é a senha da conta do Render.
-7. Faça o deploy e confirme o Swagger e o login pela URL pública.
-
-O Render fornece `PORT` automaticamente. A aplicação lê essa variável e usa `8080` como fallback local.
+Como etapa adicional do projeto, a API foi empacotada com Docker e publicada no Render, integrada ao PostgreSQL gerenciado. A configuração de produção utiliza variáveis de ambiente para proteger credenciais do banco, segredo JWT e origens CORS.
 
 ## Estrutura
 
@@ -270,7 +260,7 @@ src/main/java/com/agendaplus/
 src/main/resources/
 └── db/migration/   # migrações versionadas do Flyway
 
-scripts/            # scripts auxiliares de demonstração e deploy
+scripts/            # scripts auxiliares e demonstrações
 docs/               # documentação complementar
 ```
 
