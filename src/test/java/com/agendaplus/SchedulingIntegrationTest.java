@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,6 +42,19 @@ class SchedulingIntegrationTest {
                         .param("dataInicio", inicio.toLocalDate().toString()).param("dataFim", inicio.toLocalDate().toString())
                         .param("profissionalId", request.get("profissionalId").toString()).param("status", "PENDENTE"))
                 .andExpect(status().isOk()).andExpect(jsonPath("totalElementos").value(1));
+    }
+
+    @Test
+    void listaAgendamentosAdministrativosSemDataFinal() throws Exception {
+        Cliente cliente = cliente();
+        Cliente admin = conta("/auth/cadastro-negocio");
+        LocalDateTime inicio = LocalDateTime.now().plusDays(10).withSecond(0).withNano(0);
+        criar(cliente.token(), request(inicio, cliente.id())).andExpect(status().isCreated());
+
+        mvc.perform(get("/agendamentos").header("Authorization", "Bearer " + admin.token())
+                        .param("dataInicio", inicio.toLocalDate().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("totalElementos").value(greaterThanOrEqualTo(1)));
     }
 
     @Test

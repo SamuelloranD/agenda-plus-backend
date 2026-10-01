@@ -14,10 +14,11 @@ public class ListarAgendamentosUseCase {
     private final AgendamentoRepository repository;
     public ListarAgendamentosUseCase(AgendamentoRepository repository) { this.repository = repository; }
     public PaginaAgendamentosResponse executar(LocalDate dataInicio, LocalDate dataFim, UUID profissionalId, StatusAgendamento status, int pagina, int tamanho) {
-        if (dataInicio == null || dataFim == null || dataFim.isBefore(dataInicio)) throw new IllegalArgumentException("O período de consulta é inválido.");
+        if (dataInicio == null && dataFim == null) throw new IllegalArgumentException("Informe ao menos uma data para a consulta.");
+        if (dataInicio != null && dataFim != null && dataFim.isBefore(dataInicio)) throw new IllegalArgumentException("O período de consulta é inválido.");
         validarPaginacao(pagina, tamanho);
-        LocalDateTime inicio = dataInicio.atStartOfDay();
-        LocalDateTime fim = dataFim.plusDays(1).atTime(LocalTime.MIDNIGHT);
+        LocalDateTime inicio = dataInicio == null ? null : dataInicio.atStartOfDay();
+        LocalDateTime fim = dataFim == null ? null : dataFim.plusDays(1).atTime(LocalTime.MIDNIGHT);
         var itens = repository.listar(inicio, fim, profissionalId, status, pagina, tamanho).stream().map(AgendamentoResponse::from).toList();
         long total = repository.contar(inicio, fim, profissionalId, status);
         return pagina(itens, pagina, tamanho, total);

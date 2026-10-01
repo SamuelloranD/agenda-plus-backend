@@ -22,7 +22,8 @@ public interface SpringDataAgendamentoRepository extends JpaRepository<Agendamen
 
     @Query("""
             select a from AgendamentoJpaEntity a
-            where a.periodoInicio < :fim and a.periodoFim > :inicio
+            where (cast(:inicio as LocalDateTime) is null or a.periodoFim > :inicio)
+              and (cast(:fim as LocalDateTime) is null or a.periodoInicio < :fim)
               and (:profissionalId is null or a.profissionalId = :profissionalId)
               and (:status is null or a.status = :status)
             order by a.periodoInicio

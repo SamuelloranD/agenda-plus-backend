@@ -51,8 +51,8 @@ public class AgendamentoController {
     @GetMapping
     @Operation(summary = "Listar agendamentos", description = "Lista agendamentos por período e, opcionalmente, por profissional")
     public PaginaAgendamentosResponse listar(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
             @RequestParam(required = false) UUID profissionalId,
             @RequestParam(required = false) StatusAgendamento status,
             @RequestParam(defaultValue = "0") int pagina,
