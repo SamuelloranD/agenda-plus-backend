@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,8 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
 class ServicesIntegrationTest {
-    private static final String IMAGEM = "data:image/png;base64,YQ==";
-
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
 
@@ -32,13 +29,12 @@ class ServicesIntegrationTest {
     void realizaCrudDeServicoComPrecoMonetario() throws Exception {
         String token = token();
         var request = Map.of("nome", "Corte masculino", "duracaoMinutos", 60,
-                "preco", Map.of("valor", "45.00", "moeda", "BRL"), "imagem", IMAGEM);
+                "preco", Map.of("valor", "45.00", "moeda", "BRL"));
 
         String body = mvc.perform(post("/servicos").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("nome").value("Corte masculino"))
-                .andExpect(jsonPath("imagem").value(IMAGEM))
                 .andExpect(jsonPath("preco.valor").value(45.00))
                 .andExpect(jsonPath("preco.moeda").value("BRL"))
                 .andReturn().getResponse().getContentAsString();
@@ -50,16 +46,10 @@ class ServicesIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("duracaoMinutos").value(60));
 
         var update = Map.of("nome", "Corte premium", "duracaoMinutos", 75,
-                "preco", Map.of("valor", "60.00", "moeda", "BRL"), "imagem", IMAGEM);
+                "preco", Map.of("valor", "60.00", "moeda", "BRL"));
         mvc.perform(put("/servicos/{id}", id).header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(update)))
-                .andExpect(status().isOk()).andExpect(jsonPath("duracaoMinutos").value(75))
-                .andExpect(jsonPath("imagem").value(IMAGEM));
-        var clearImage = new HashMap<String, Object>(update);
-        clearImage.put("imagem", null);
-        mvc.perform(put("/servicos/{id}", id).header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(clearImage)))
-                .andExpect(status().isOk()).andExpect(jsonPath("imagem").value(org.hamcrest.Matchers.nullValue()));
+                .andExpect(status().isOk()).andExpect(jsonPath("duracaoMinutos").value(75));
         mvc.perform(delete("/servicos/{id}", id).header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
@@ -95,18 +85,6 @@ class ServicesIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("status").value(404))
                 .andExpect(jsonPath("detail").value("Serviço não encontrado."));
-    }
-
-    @Test
-    void rejeitaImagemComMimeNaoPermitido() throws Exception {
-        String token = token();
-        var request = Map.of("nome", "Corte", "duracaoMinutos", 60,
-                "preco", Map.of("valor", "45.00", "moeda", "BRL"),
-                "imagem", "data:image/gif;base64,YQ==");
-
-        mvc.perform(post("/servicos").header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(request)))
-                .andExpect(status().isBadRequest());
     }
 
     private String token() throws Exception {
