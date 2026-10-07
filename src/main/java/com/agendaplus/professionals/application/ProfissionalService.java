@@ -21,7 +21,7 @@ public class ProfissionalService {
     @Transactional
     public Profissional criar(ProfissionalRequest request) {
         request.validarHorarios();
-        var profissional = new Profissional(UUID.randomUUID(), request.nome(), request.especialidade());
+        var profissional = new Profissional(UUID.randomUUID(), request.nome(), request.especialidade(), request.imagem());
         profissional.substituirHorarios(criarHorarios(request.horariosTrabalho()));
         return profissionais.saveAndFlush(profissional);
     }
@@ -36,7 +36,7 @@ public class ProfissionalService {
     public Profissional atualizar(UUID id, ProfissionalRequest request) {
         request.validarHorarios();
         var profissional = buscar(id);
-        profissional.atualizarDados(request.nome(), request.especialidade());
+        profissional.atualizarDados(request.nome(), request.especialidade(), request.imagem());
         profissional.atualizarHorarios(criarHorarios(request.horariosTrabalho()));
         return profissionais.saveAndFlush(profissional);
     }

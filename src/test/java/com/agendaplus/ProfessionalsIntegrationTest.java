@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,6 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
 class ProfessionalsIntegrationTest {
+    private static final String IMAGEM = "data:image/jpeg;base64,YQ==";
+
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
 
@@ -32,12 +35,14 @@ class ProfessionalsIntegrationTest {
         var request = Map.of(
                 "nome", "Ana Silva",
                 "especialidade", "Corte e escova",
+                "imagem", IMAGEM,
                 "horariosTrabalho", List.of(Map.of("diaSemana", "MONDAY", "inicio", "09:00", "fim", "12:00")));
 
         String body = mvc.perform(post("/profissionais").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("nome").value("Ana Silva"))
+                .andExpect(jsonPath("imagem").value(IMAGEM))
                 .andExpect(jsonPath("horariosTrabalho[0].diaSemana").value("MONDAY"))
                 .andReturn().getResponse().getContentAsString();
         String id = json.readTree(body).get("id").asText();
@@ -52,6 +57,18 @@ class ProfessionalsIntegrationTest {
         mvc.perform(put("/profissionais/{id}", id).header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(update)))
                 .andExpect(status().isOk()).andExpect(jsonPath("nome").value("Ana Atualizada"));
+        var updatePayload = new HashMap<String, Object>();
+        updatePayload.put("nome", "Ana Atualizada");
+        updatePayload.put("especialidade", "Coloracao");
+        updatePayload.put("horariosTrabalho", List.of(Map.of("diaSemana", "TUESDAY", "inicio", "10:00", "fim", "14:00")));
+        updatePayload.put("imagem", IMAGEM);
+        mvc.perform(put("/profissionais/{id}", id).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(updatePayload)))
+                .andExpect(status().isOk()).andExpect(jsonPath("imagem").value(IMAGEM));
+        updatePayload.put("imagem", null);
+        mvc.perform(put("/profissionais/{id}", id).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(updatePayload)))
+                .andExpect(status().isOk()).andExpect(jsonPath("imagem").value(org.hamcrest.Matchers.nullValue()));
         mvc.perform(delete("/profissionais/{id}", id).header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
         mvc.perform(get("/profissionais/{id}", id).header("Authorization", "Bearer " + token))
@@ -84,6 +101,20 @@ class ProfessionalsIntegrationTest {
                 .andExpect(jsonPath("nome").value("Ana Atualizada"))
                 .andExpect(jsonPath("horariosTrabalho.length()").value(1))
                 .andExpect(jsonPath("horariosTrabalho[0].inicio").value("09:00:00"));
+    }
+
+    @Test
+    void rejeitaImagemComMimeNaoPermitido() throws Exception {
+        String token = token();
+        var request = Map.of(
+                "nome", "Ana Silva",
+                "especialidade", "Corte e escova",
+                "imagem", "data:image/gif;base64,YQ==",
+                "horariosTrabalho", List.of(Map.of("diaSemana", "MONDAY", "inicio", "09:00", "fim", "12:00")));
+
+        mvc.perform(post("/profissionais").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(request)))
+                .andExpect(status().isBadRequest());
     }
 
     private String token() throws Exception {
