@@ -1,6 +1,7 @@
 package com.agendaplus.services.domain.model;
 
 import com.agendaplus.shared.domain.model.Dinheiro;
+import com.agendaplus.shared.domain.model.ImagemData;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -19,6 +20,8 @@ public class Servico {
     @Id
     private UUID id;
     private String nome;
+    @Column(columnDefinition = "TEXT")
+    private String imagem;
     @Column(name = "duracao_minutos")
     private int duracaoMinutos;
     @Column(name = "preco_valor", precision = 19, scale = 2)
@@ -43,17 +46,27 @@ public class Servico {
     void onUpdate() { updatedAt = Instant.now(); }
 
     public Servico(UUID id, String nome, int duracaoMinutos, Dinheiro preco) {
+        this(id, nome, duracaoMinutos, preco, null);
+    }
+
+    public Servico(UUID id, String nome, int duracaoMinutos, Dinheiro preco, String imagem) {
         this.id = id;
-        atualizar(nome, duracaoMinutos, preco);
+        atualizar(nome, duracaoMinutos, preco, imagem);
     }
 
     public void atualizar(String nome, int duracaoMinutos, Dinheiro preco) {
+        atualizar(nome, duracaoMinutos, preco, imagem);
+    }
+
+    public void atualizar(String nome, int duracaoMinutos, Dinheiro preco, String imagem) {
         if (nome == null || nome.isBlank() || nome.strip().length() > 150) {
             throw new IllegalArgumentException("Nome deve conter entre 1 e 150 caracteres.");
         }
         if (duracaoMinutos <= 0) throw new IllegalArgumentException("A duração deve ser positiva.");
         if (preco == null) throw new IllegalArgumentException("Preço é obrigatório.");
+        ImagemData.validar(imagem);
         this.nome = nome.strip();
+        this.imagem = imagem;
         this.duracaoMinutos = duracaoMinutos;
         this.precoValor = preco.getValor();
         this.precoMoeda = preco.getMoeda().getCurrencyCode();
@@ -61,6 +74,7 @@ public class Servico {
 
     public UUID getId() { return id; }
     public String getNome() { return nome; }
+    public String getImagem() { return imagem; }
     public int getDuracaoMinutos() { return duracaoMinutos; }
     public Dinheiro getPreco() { return new Dinheiro(precoValor, Currency.getInstance(precoMoeda)); }
     public Instant getCreatedAt() { return createdAt; }

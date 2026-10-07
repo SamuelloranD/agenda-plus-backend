@@ -19,7 +19,7 @@ public class ServicoService {
 
     @Transactional
     public Servico criar(ServicoRequest request) {
-        var servico = new Servico(UUID.randomUUID(), request.nome(), request.duracaoMinutos(), dinheiro(request));
+        var servico = new Servico(UUID.randomUUID(), request.nome(), request.duracaoMinutos(), dinheiro(request), request.imagem());
         return servicos.saveAndFlush(servico);
     }
 
@@ -32,7 +32,7 @@ public class ServicoService {
     @Transactional
     public Servico atualizar(UUID id, ServicoRequest request) {
         var servico = buscar(id);
-        servico.atualizar(request.nome(), request.duracaoMinutos(), dinheiro(request));
+        servico.atualizar(request.nome(), request.duracaoMinutos(), dinheiro(request), request.imagem());
         return servicos.saveAndFlush(servico);
     }
 

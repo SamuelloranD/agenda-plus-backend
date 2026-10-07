@@ -1,5 +1,6 @@
 package com.agendaplus.professionals.domain.model;
 
+import com.agendaplus.shared.domain.model.ImagemData;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -28,6 +29,8 @@ public class Profissional {
     private UUID id;
     private String nome;
     private String especialidade;
+    @Column(columnDefinition = "TEXT")
+    private String imagem;
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
     @Column(name = "updated_at", nullable = false)
@@ -49,19 +52,29 @@ public class Profissional {
     void onUpdate() { updatedAt = Instant.now(); }
 
     public Profissional(UUID id, String nome, String especialidade) {
+        this(id, nome, especialidade, null);
+    }
+
+    public Profissional(UUID id, String nome, String especialidade, String imagem) {
         this.id = id;
-        atualizarDados(nome, especialidade);
+        atualizarDados(nome, especialidade, imagem);
     }
 
     public void atualizarDados(String nome, String especialidade) {
+        atualizarDados(nome, especialidade, imagem);
+    }
+
+    public void atualizarDados(String nome, String especialidade, String imagem) {
         if (nome == null || nome.isBlank() || nome.strip().length() > 150) {
             throw new IllegalArgumentException("Nome deve conter entre 1 e 150 caracteres.");
         }
         if (especialidade == null || especialidade.isBlank() || especialidade.strip().length() > 150) {
             throw new IllegalArgumentException("Especialidade deve conter entre 1 e 150 caracteres.");
         }
+        ImagemData.validar(imagem);
         this.nome = nome.strip();
         this.especialidade = especialidade.strip();
+        this.imagem = imagem;
     }
 
     public void substituirHorarios(List<HorarioTrabalho> horarios) {
@@ -100,6 +113,7 @@ public class Profissional {
     public UUID getId() { return id; }
     public String getNome() { return nome; }
     public String getEspecialidade() { return especialidade; }
+    public String getImagem() { return imagem; }
     public List<HorarioTrabalho> getHorariosTrabalho() { return List.copyOf(horariosTrabalho); }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

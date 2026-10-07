@@ -9,6 +9,7 @@ import java.util.List;
 
 public record ProfissionalRequest(@NotBlank @Size(max = 150) String nome,
                                   @NotBlank @Size(max = 150) String especialidade,
+                                  String imagem,
                                   @NotNull @Valid List<HorarioTrabalhoRequest> horariosTrabalho) {
     public void validarHorarios() { horariosTrabalho.forEach(HorarioTrabalhoRequest::validarPeriodo); }
 }

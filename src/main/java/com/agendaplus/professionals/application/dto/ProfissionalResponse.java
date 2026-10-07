@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.UUID;
 
 public record ProfissionalResponse(UUID id, String nome, String especialidade,
+                                   String imagem,
                                    List<HorarioTrabalhoResponse> horariosTrabalho) {
     public static ProfissionalResponse from(Profissional profissional) {
         return new ProfissionalResponse(profissional.getId(), profissional.getNome(), profissional.getEspecialidade(),
+                profissional.getImagem(),
                 profissional.getHorariosTrabalho().stream().map(HorarioTrabalhoResponse::from).toList());
     }
 }
