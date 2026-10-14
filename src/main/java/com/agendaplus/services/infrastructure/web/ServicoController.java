@@ -32,6 +32,13 @@ public class ServicoController {
         return ServicoResponse.from(service.atualizar(id, request));
     }
 
+    public record StatusRequest(@jakarta.validation.constraints.NotNull Boolean ativo) {}
+
+    @PatchMapping("/{id}/status")
+    public ServicoResponse alterarStatus(@PathVariable UUID id, @Valid @RequestBody StatusRequest request) {
+        return ServicoResponse.from(service.alterarStatus(id, request.ativo()));
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluir(@PathVariable UUID id) { service.excluir(id); }

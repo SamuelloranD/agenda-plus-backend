@@ -40,6 +40,10 @@ public class SecurityConfiguration {
                                 "/profissionais", "/profissionais/{id}",
                                 "/profissionais/{id}/horarios-disponiveis").permitAll()
                         .requestMatchers(HttpMethod.GET, "/agendamentos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/servicos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/servicos/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/servicos/{id}/status").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/servicos/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/profissionais").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/profissionais/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/profissionais/{id}/status").hasRole("ADMIN")

@@ -3,6 +3,7 @@ package com.agendaplus.services.application;
 import com.agendaplus.services.application.dto.ServicoRequest;
 import com.agendaplus.services.domain.model.Servico;
 import com.agendaplus.services.infrastructure.persistence.ServicoRepository;
+import com.agendaplus.scheduling.domain.repository.AgendamentoRepository;
 import com.agendaplus.shared.domain.model.Dinheiro;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +15,18 @@ import java.util.UUID;
 @Service
 public class ServicoService {
     private final ServicoRepository servicos;
+    private final AgendamentoRepository agendamentos;
 
-    public ServicoService(ServicoRepository servicos) { this.servicos = servicos; }
+    public ServicoService(ServicoRepository servicos, AgendamentoRepository agendamentos) {
+        this.servicos = servicos;
+        this.agendamentos = agendamentos;
+    }
 
     @Transactional
     public Servico criar(ServicoRequest request) {
         var servico = new Servico(UUID.randomUUID(), request.nome(), request.duracaoMinutos(), dinheiro(request));
+        servico.atualizar(request.nome(), request.descricao(), request.duracaoMinutos(), servico.getPreco());
+        servico.definirAtivo(request.ativo() == null || request.ativo());
         return servicos.saveAndFlush(servico);
     }
 
@@ -32,13 +39,22 @@ public class ServicoService {
     @Transactional
     public Servico atualizar(UUID id, ServicoRequest request) {
         var servico = buscar(id);
-        servico.atualizar(request.nome(), request.duracaoMinutos(), dinheiro(request));
+        servico.atualizar(request.nome(), request.descricao() == null ? servico.getDescricao() : request.descricao(), request.duracaoMinutos(), dinheiro(request));
+        if (request.ativo() != null) servico.definirAtivo(request.ativo());
+        return servicos.saveAndFlush(servico);
+    }
+
+    @Transactional
+    public Servico alterarStatus(UUID id, boolean ativo) {
+        var servico = buscar(id);
+        servico.definirAtivo(ativo);
         return servicos.saveAndFlush(servico);
     }
 
     @Transactional
     public void excluir(UUID id) {
         if (!servicos.existsById(id)) throw new ServicoNaoEncontradoException();
+        if (agendamentos.temVinculosServico(id)) throw new ServicoComAgendamentosException();
         servicos.deleteById(id);
     }
 

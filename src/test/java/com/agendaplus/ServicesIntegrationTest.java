@@ -28,13 +28,15 @@ class ServicesIntegrationTest {
     @Test
     void realizaCrudDeServicoComPrecoMonetario() throws Exception {
         String token = token();
-        var request = Map.of("nome", "Corte masculino", "duracaoMinutos", 60,
+        var request = Map.of("nome", "Corte masculino", "descricao", "Corte tradicional", "ativo", true, "duracaoMinutos", 60,
                 "preco", Map.of("valor", "45.00", "moeda", "BRL"));
 
         String body = mvc.perform(post("/servicos").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("nome").value("Corte masculino"))
+                .andExpect(jsonPath("descricao").value("Corte tradicional"))
+                .andExpect(jsonPath("ativo").value(true))
                 .andExpect(jsonPath("preco.valor").value(45.00))
                 .andExpect(jsonPath("preco.moeda").value("BRL"))
                 .andReturn().getResponse().getContentAsString();
@@ -45,11 +47,17 @@ class ServicesIntegrationTest {
         mvc.perform(get("/servicos/{id}", id).header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andExpect(jsonPath("duracaoMinutos").value(60));
 
+        mvc.perform(patch("/servicos/{id}/status", id).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"ativo\":false}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("ativo").value(false));
+
         var update = Map.of("nome", "Corte premium", "duracaoMinutos", 75,
                 "preco", Map.of("valor", "60.00", "moeda", "BRL"));
         mvc.perform(put("/servicos/{id}", id).header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(update)))
-                .andExpect(status().isOk()).andExpect(jsonPath("duracaoMinutos").value(75));
+                .andExpect(status().isOk()).andExpect(jsonPath("duracaoMinutos").value(75))
+                .andExpect(jsonPath("descricao").value("Corte tradicional"))
+                .andExpect(jsonPath("ativo").value(false));
         mvc.perform(delete("/servicos/{id}", id).header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
     }
@@ -87,9 +95,23 @@ class ServicesIntegrationTest {
                 .andExpect(jsonPath("detail").value("Serviço não encontrado."));
     }
 
+    @Test
+    void clienteNaoPodeAlterarCatalogo() throws Exception {
+        String clienteToken = token("/auth/cadastro");
+        mvc.perform(post("/servicos").header("Authorization", "Bearer " + clienteToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsBytes(Map.of("nome", "Corte", "duracaoMinutos", 30,
+                                "preco", Map.of("valor", "20.00", "moeda", "BRL")))))
+                .andExpect(status().isForbidden());
+    }
+
     private String token() throws Exception {
+        return token("/auth/cadastro-negocio");
+    }
+
+    private String token(String rotaCadastro) throws Exception {
         String email = UUID.randomUUID() + "@exemplo.com";
-        mvc.perform(post("/auth/cadastro-negocio").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post(rotaCadastro).contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsBytes(Map.of("nome", "Admin", "email", email, "senha", "senha-segura"))))
                 .andExpect(status().isCreated());
         String body = mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)

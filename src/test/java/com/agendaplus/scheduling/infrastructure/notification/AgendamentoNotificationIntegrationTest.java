@@ -7,6 +7,11 @@ import com.agendaplus.scheduling.domain.event.AgendamentoConfirmado;
 import com.agendaplus.scheduling.domain.model.PeriodoAgendamento;
 import com.agendaplus.professionals.domain.model.Profissional;
 import com.agendaplus.professionals.infrastructure.persistence.ProfissionalRepository;
+import com.agendaplus.services.domain.model.Servico;
+import com.agendaplus.services.infrastructure.persistence.ServicoRepository;
+import com.agendaplus.shared.domain.model.Dinheiro;
+import java.math.BigDecimal;
+import java.util.Currency;
 import com.agendaplus.scheduling.application.port.NotificadorDeAgendamento;
 import com.agendaplus.scheduling.infrastructure.notification.AgendamentoCanceladoListener;
 import com.agendaplus.scheduling.infrastructure.notification.AgendamentoConfirmadoListener;
@@ -52,6 +57,7 @@ class AgendamentoNotificationIntegrationTest {
     @org.springframework.beans.factory.annotation.Autowired ObjectMapper json;
     @org.springframework.beans.factory.annotation.Autowired Clock clock;
     @org.springframework.beans.factory.annotation.Autowired ProfissionalRepository profissionais;
+    @org.springframework.beans.factory.annotation.Autowired ServicoRepository servicos;
 
     @BeforeEach
     void limpar() {
@@ -158,12 +164,14 @@ class AgendamentoNotificationIntegrationTest {
     private String criarAgendamento(Conta cliente, LocalDateTime inicio) throws Exception {
         UUID profissionalId = UUID.randomUUID();
         profissionais.saveAndFlush(new Profissional(profissionalId, "Profissional de teste", "Barbeiro"));
+        UUID servicoId = UUID.randomUUID();
+        servicos.saveAndFlush(new Servico(servicoId, "Serviço de teste", 60, new Dinheiro(BigDecimal.TEN, Currency.getInstance("BRL"))));
         var request = Map.of(
                 "inicio", inicio,
                 "fim", inicio.plusHours(1),
                 "profissionalId", profissionalId,
                 "clienteId", cliente.id(),
-                "servicoId", UUID.randomUUID());
+                "servicoId", servicoId);
 
         String resposta = mvc.perform(post("/agendamentos")
                         .header("Authorization", "Bearer " + cliente.token())

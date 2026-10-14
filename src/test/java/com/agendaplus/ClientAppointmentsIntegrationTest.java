@@ -5,6 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.agendaplus.scheduling.domain.model.StatusAgendamento;
 import com.agendaplus.professionals.domain.model.Profissional;
 import com.agendaplus.professionals.infrastructure.persistence.ProfissionalRepository;
+import com.agendaplus.services.domain.model.Servico;
+import com.agendaplus.services.infrastructure.persistence.ServicoRepository;
+import com.agendaplus.shared.domain.model.Dinheiro;
+import java.math.BigDecimal;
+import java.util.Currency;
 import com.agendaplus.scheduling.infrastructure.persistence.AgendamentoJpaEntity;
 import com.agendaplus.scheduling.infrastructure.persistence.SpringDataAgendamentoRepository;
 import org.junit.jupiter.api.Test;
@@ -40,6 +45,7 @@ class ClientAppointmentsIntegrationTest {
     @Autowired ObjectMapper json;
     @Autowired SpringDataAgendamentoRepository repository;
     @Autowired ProfissionalRepository profissionais;
+    @Autowired ServicoRepository servicos;
     @Autowired Clock clock;
 
     @Test
@@ -206,12 +212,14 @@ class ClientAppointmentsIntegrationTest {
     private String criarAgendamento(Cliente cliente, LocalDateTime inicio) throws Exception {
         UUID profissionalId = UUID.randomUUID();
         profissionais.saveAndFlush(new Profissional(profissionalId, "Profissional de teste", "Barbeiro"));
+        UUID servicoId = UUID.randomUUID();
+        servicos.saveAndFlush(new Servico(servicoId, "Serviço de teste", 60, new Dinheiro(BigDecimal.TEN, Currency.getInstance("BRL"))));
         var request = Map.of(
                 "inicio", inicio,
                 "fim", inicio.plusHours(1),
                 "profissionalId", profissionalId,
                 "clienteId", cliente.id(),
-                "servicoId", UUID.randomUUID());
+                "servicoId", servicoId);
 
         String resposta = mvc.perform(post("/agendamentos")
                         .header("Authorization", "Bearer " + cliente.token())

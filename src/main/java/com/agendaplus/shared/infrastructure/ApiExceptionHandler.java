@@ -5,6 +5,7 @@ import com.agendaplus.professionals.application.ProfissionalNaoEncontradoExcepti
 import com.agendaplus.professionals.application.ProfissionalComAgendamentosException;
 import com.agendaplus.identity.application.cliente.ClienteNaoEncontradoException;
 import com.agendaplus.services.application.ServicoNaoEncontradoException;
+import com.agendaplus.services.application.ServicoComAgendamentosException;
 
 import com.agendaplus.identity.application.exception.CredenciaisInvalidasException;
 import com.agendaplus.scheduling.domain.exception.AgendamentoNaoEncontradoException;
@@ -40,6 +41,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ServicoNaoEncontradoException.class)
     ProblemDetail servicoNaoEncontrado(ServicoNaoEncontradoException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(ServicoComAgendamentosException.class)
+    ProblemDetail servicoComAgendamentos(ServicoComAgendamentosException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
     @ExceptionHandler(AgendamentoNaoEncontradoException.class)

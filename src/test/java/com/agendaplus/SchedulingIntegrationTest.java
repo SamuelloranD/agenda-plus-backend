@@ -12,6 +12,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import com.agendaplus.professionals.domain.model.Profissional;
 import com.agendaplus.professionals.infrastructure.persistence.ProfissionalRepository;
+import com.agendaplus.services.domain.model.Servico;
+import com.agendaplus.services.infrastructure.persistence.ServicoRepository;
+import com.agendaplus.shared.domain.model.Dinheiro;
+import java.math.BigDecimal;
+import java.util.Currency;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -29,6 +34,7 @@ class SchedulingIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired ProfissionalRepository profissionais;
+    @Autowired ServicoRepository servicos;
 
     @Test
     void criaAgendamentoComSucessoEListaPorPeriodo() throws Exception {
@@ -176,8 +182,10 @@ class SchedulingIntegrationTest {
         if (!profissionais.existsById(profissionalId)) {
             profissionais.saveAndFlush(new Profissional(profissionalId, "Profissional de teste", "Barbeiro"));
         }
+        UUID servicoId = UUID.randomUUID();
+        servicos.saveAndFlush(new Servico(servicoId, "Serviço de teste", 60, new Dinheiro(BigDecimal.TEN, Currency.getInstance("BRL"))));
         return Map.of("inicio", inicio, "fim", inicio.plusHours(1), "profissionalId", profissionalId,
-                "clienteId", clienteId, "servicoId", UUID.randomUUID());
+                "clienteId", clienteId, "servicoId", servicoId);
     }
 
     private String id(String body) throws Exception { return json.readTree(body).get("id").asText(); }

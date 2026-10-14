@@ -68,6 +68,18 @@ class ListarHorariosDisponiveisUseCaseTest {
                 LocalDateTime.of(2026, 9, 14, 11, 0));
     }
 
+    @Test
+    void servicoInativoNaoOfereceHorarios() {
+        prepararProfissional(new HorarioTrabalho(UUID.randomUUID(), DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(12, 0)));
+        var servico = new Servico(servicoId, "Corte", 60,
+                new Dinheiro(new BigDecimal("50.00"), Currency.getInstance("BRL")));
+        servico.definirAtivo(false);
+        when(servicos.findById(servicoId)).thenReturn(Optional.of(servico));
+
+        assertThat(useCase.executar(profissionalId, data, servicoId)).isEmpty();
+        verifyNoInteractions(agendamentos);
+    }
+
     private void prepararProfissional(HorarioTrabalho... horarios) {
         var profissional = new Profissional(profissionalId, "Ana", "Corte");
         profissional.substituirHorarios(List.of(horarios));

@@ -19,6 +19,10 @@ public class Servico {
     @Id
     private UUID id;
     private String nome;
+    @Column(length = 500)
+    private String descricao;
+    @Column(nullable = false)
+    private boolean ativo = true;
     @Column(name = "duracao_minutos")
     private int duracaoMinutos;
     @Column(name = "preco_valor", precision = 19, scale = 2)
@@ -48,12 +52,20 @@ public class Servico {
     }
 
     public void atualizar(String nome, int duracaoMinutos, Dinheiro preco) {
+        atualizar(nome, descricao, duracaoMinutos, preco);
+    }
+
+    public void atualizar(String nome, String descricao, int duracaoMinutos, Dinheiro preco) {
         if (nome == null || nome.isBlank() || nome.strip().length() > 150) {
             throw new IllegalArgumentException("Nome deve conter entre 1 e 150 caracteres.");
+        }
+        if (descricao != null && descricao.length() > 500) {
+            throw new IllegalArgumentException("A descrição deve ter no máximo 500 caracteres.");
         }
         if (duracaoMinutos <= 0) throw new IllegalArgumentException("A duração deve ser positiva.");
         if (preco == null) throw new IllegalArgumentException("Preço é obrigatório.");
         this.nome = nome.strip();
+        this.descricao = descricao == null || descricao.isBlank() ? null : descricao.strip();
         this.duracaoMinutos = duracaoMinutos;
         this.precoValor = preco.getValor();
         this.precoMoeda = preco.getMoeda().getCurrencyCode();
@@ -61,6 +73,9 @@ public class Servico {
 
     public UUID getId() { return id; }
     public String getNome() { return nome; }
+    public String getDescricao() { return descricao; }
+    public boolean isAtivo() { return ativo; }
+    public void definirAtivo(boolean ativo) { this.ativo = ativo; }
     public int getDuracaoMinutos() { return duracaoMinutos; }
     public Dinheiro getPreco() { return new Dinheiro(precoValor, Currency.getInstance(precoMoeda)); }
     public Instant getCreatedAt() { return createdAt; }

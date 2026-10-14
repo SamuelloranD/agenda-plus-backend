@@ -12,6 +12,7 @@ public interface AgendamentoRepository {
     Optional<Agendamento> buscarPorId(UUID id);
     List<Agendamento> buscarPorProfissionalEPeriodo(UUID profissionalId, LocalDateTime inicio, LocalDateTime fim);
     boolean temVinculosProfissional(UUID profissionalId);
+    boolean temVinculosServico(UUID servicoId);
     List<Agendamento> listar(LocalDateTime inicio, LocalDateTime fim, UUID profissionalId, StatusAgendamento status, int pagina, int tamanho);
     long contar(LocalDateTime inicio, LocalDateTime fim, UUID profissionalId, StatusAgendamento status);
     List<Agendamento> listarPorCliente(UUID clienteId, LocalDateTime inicio, LocalDateTime fim, int pagina, int tamanho);

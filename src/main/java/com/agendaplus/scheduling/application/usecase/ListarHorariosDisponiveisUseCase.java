@@ -38,6 +38,7 @@ public class ListarHorariosDisponiveisUseCase {
         var profissional = profissionais.findById(profissionalId).orElseThrow(ProfissionalNaoEncontradoException::new);
         if (!profissional.isAtivo()) return List.of();
         var servico = servicos.findById(servicoId).orElseThrow(ServicoNaoEncontradoException::new);
+        if (!servico.isAtivo()) return List.of();
         LocalDateTime inicioDia = data.atStartOfDay();
         LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
         var existentes = agendamentos.buscarPorProfissionalEPeriodo(profissionalId, inicioDia, fimDia);

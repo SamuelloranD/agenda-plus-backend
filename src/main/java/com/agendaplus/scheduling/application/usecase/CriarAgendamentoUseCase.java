@@ -7,6 +7,8 @@ import com.agendaplus.scheduling.domain.repository.AgendamentoRepository;
 import com.agendaplus.scheduling.domain.service.VerificadorDeDisponibilidade;
 import com.agendaplus.professionals.application.ProfissionalNaoEncontradoException;
 import com.agendaplus.professionals.infrastructure.persistence.ProfissionalRepository;
+import com.agendaplus.services.infrastructure.persistence.ServicoRepository;
+import com.agendaplus.services.application.ServicoNaoEncontradoException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -14,14 +16,18 @@ public class CriarAgendamentoUseCase {
     private final AgendamentoRepository repository;
     private final VerificadorDeDisponibilidade disponibilidade;
     private final ProfissionalRepository profissionais;
+    private final ServicoRepository servicos;
     public CriarAgendamentoUseCase(AgendamentoRepository repository, VerificadorDeDisponibilidade disponibilidade,
-                                   ProfissionalRepository profissionais) {
+                                   ProfissionalRepository profissionais, ServicoRepository servicos) {
         this.repository = repository; this.disponibilidade = disponibilidade; this.profissionais = profissionais;
+        this.servicos = servicos;
     }
     public Agendamento executar(LocalDateTime inicio, LocalDateTime fim, UUID profissionalId, UUID clienteId, UUID servicoId) {
         var periodo = new PeriodoAgendamento(inicio, fim);
         var profissional = profissionais.findById(profissionalId).orElseThrow(ProfissionalNaoEncontradoException::new);
         if (!profissional.isAtivo()) throw new HorarioIndisponivelException();
+        var servico = servicos.findById(servicoId).orElseThrow(ServicoNaoEncontradoException::new);
+        if (!servico.isAtivo()) throw new HorarioIndisponivelException();
         if (!disponibilidade.estaDisponivel(profissionalId, periodo,
                 repository.buscarPorProfissionalEPeriodo(profissionalId, inicio, fim))) {
             throw new HorarioIndisponivelException();
