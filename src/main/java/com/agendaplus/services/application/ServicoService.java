@@ -53,8 +53,13 @@ public class ServicoService {
 
     @Transactional
     public void excluir(UUID id) {
-        if (!servicos.existsById(id)) throw new ServicoNaoEncontradoException();
-        if (agendamentos.temVinculosServico(id)) throw new ServicoComAgendamentosException();
+        var servico = buscar(id);
+        if (agendamentos.temVinculosServicoAtivosOuFuturos(id)) throw new ServicoComAgendamentosException();
+        if (agendamentos.temVinculosServico(id)) {
+            servico.definirAtivo(false);
+            servicos.saveAndFlush(servico);
+            return;
+        }
         servicos.deleteById(id);
     }
 

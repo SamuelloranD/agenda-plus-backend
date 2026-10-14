@@ -22,6 +22,9 @@ public class AgendamentoRepositoryImpl implements AgendamentoRepository {
     public Optional<Agendamento> buscarPorId(UUID id) { return repository.findById(id).map(mapper::toDomain); }
     public boolean temVinculosProfissional(UUID profissionalId) { return repository.existsByProfissionalId(profissionalId); }
     public boolean temVinculosServico(UUID servicoId) { return repository.existsByServicoId(servicoId); }
+    public boolean temVinculosServicoAtivosOuFuturos(UUID servicoId) {
+        return repository.existeVinculoAtivoOuFuturo(servicoId, LocalDateTime.now(clock));
+    }
     public List<Agendamento> buscarPorProfissionalEPeriodo(UUID profissionalId, LocalDateTime inicio, LocalDateTime fim) {
         return repository.buscarConflitantes(profissionalId, inicio, fim).stream().map(mapper::toDomain).toList();
     }

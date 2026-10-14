@@ -14,6 +14,15 @@ public interface SpringDataAgendamentoRepository extends JpaRepository<Agendamen
     boolean existsByProfissionalId(UUID profissionalId);
     boolean existsByServicoId(UUID servicoId);
     @Query("""
+            select case when count(a) > 0 then true else false end
+            from AgendamentoJpaEntity a
+            where a.servicoId = :servicoId
+              and a.status in (PENDENTE, CONFIRMADO)
+              and a.periodoFim > :agora
+            """)
+    boolean existeVinculoAtivoOuFuturo(@Param("servicoId") UUID servicoId,
+                                       @Param("agora") LocalDateTime agora);
+    @Query("""
             select a from AgendamentoJpaEntity a
             where a.profissionalId = :profissionalId
               and a.periodoInicio < :fim and a.periodoFim > :inicio
