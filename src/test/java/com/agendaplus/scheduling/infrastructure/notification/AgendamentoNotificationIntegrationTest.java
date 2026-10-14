@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.agendaplus.scheduling.domain.event.AgendamentoCancelado;
 import com.agendaplus.scheduling.domain.event.AgendamentoConfirmado;
 import com.agendaplus.scheduling.domain.model.PeriodoAgendamento;
+import com.agendaplus.professionals.domain.model.Profissional;
+import com.agendaplus.professionals.infrastructure.persistence.ProfissionalRepository;
 import com.agendaplus.scheduling.application.port.NotificadorDeAgendamento;
 import com.agendaplus.scheduling.infrastructure.notification.AgendamentoCanceladoListener;
 import com.agendaplus.scheduling.infrastructure.notification.AgendamentoConfirmadoListener;
@@ -49,6 +51,7 @@ class AgendamentoNotificationIntegrationTest {
     @org.springframework.beans.factory.annotation.Autowired MockMvc mvc;
     @org.springframework.beans.factory.annotation.Autowired ObjectMapper json;
     @org.springframework.beans.factory.annotation.Autowired Clock clock;
+    @org.springframework.beans.factory.annotation.Autowired ProfissionalRepository profissionais;
 
     @BeforeEach
     void limpar() {
@@ -153,10 +156,12 @@ class AgendamentoNotificationIntegrationTest {
     }
 
     private String criarAgendamento(Conta cliente, LocalDateTime inicio) throws Exception {
+        UUID profissionalId = UUID.randomUUID();
+        profissionais.saveAndFlush(new Profissional(profissionalId, "Profissional de teste", "Barbeiro"));
         var request = Map.of(
                 "inicio", inicio,
                 "fim", inicio.plusHours(1),
-                "profissionalId", UUID.randomUUID(),
+                "profissionalId", profissionalId,
                 "clienteId", cliente.id(),
                 "servicoId", UUID.randomUUID());
 

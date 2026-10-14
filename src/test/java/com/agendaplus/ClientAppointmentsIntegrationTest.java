@@ -3,6 +3,8 @@ package com.agendaplus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.agendaplus.scheduling.domain.model.StatusAgendamento;
+import com.agendaplus.professionals.domain.model.Profissional;
+import com.agendaplus.professionals.infrastructure.persistence.ProfissionalRepository;
 import com.agendaplus.scheduling.infrastructure.persistence.AgendamentoJpaEntity;
 import com.agendaplus.scheduling.infrastructure.persistence.SpringDataAgendamentoRepository;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,7 @@ class ClientAppointmentsIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired SpringDataAgendamentoRepository repository;
+    @Autowired ProfissionalRepository profissionais;
     @Autowired Clock clock;
 
     @Test
@@ -201,10 +204,12 @@ class ClientAppointmentsIntegrationTest {
     }
 
     private String criarAgendamento(Cliente cliente, LocalDateTime inicio) throws Exception {
+        UUID profissionalId = UUID.randomUUID();
+        profissionais.saveAndFlush(new Profissional(profissionalId, "Profissional de teste", "Barbeiro"));
         var request = Map.of(
                 "inicio", inicio,
                 "fim", inicio.plusHours(1),
-                "profissionalId", UUID.randomUUID(),
+                "profissionalId", profissionalId,
                 "clienteId", cliente.id(),
                 "servicoId", UUID.randomUUID());
 
