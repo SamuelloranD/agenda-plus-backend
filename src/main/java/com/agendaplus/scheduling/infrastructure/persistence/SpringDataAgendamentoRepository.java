@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface SpringDataAgendamentoRepository extends JpaRepository<AgendamentoJpaEntity, UUID> {
+    boolean existsByProfissionalId(UUID profissionalId);
     @Query("""
             select a from AgendamentoJpaEntity a
             where a.profissionalId = :profissionalId

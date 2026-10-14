@@ -31,6 +31,8 @@ public class Profissional {
     private String especialidade;
     @Column(columnDefinition = "TEXT")
     private String imagem;
+    @Column(nullable = false)
+    private boolean ativo = true;
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
     @Column(name = "updated_at", nullable = false)
@@ -111,6 +113,8 @@ public class Profissional {
     }
 
     public UUID getId() { return id; }
+    public boolean isAtivo() { return ativo; }
+    public void definirAtivo(boolean ativo) { this.ativo = ativo; }
     public String getNome() { return nome; }
     public String getEspecialidade() { return especialidade; }
     public String getImagem() { return imagem; }

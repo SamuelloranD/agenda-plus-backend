@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import com.agendaplus.professionals.domain.model.Profissional;
+import com.agendaplus.professionals.infrastructure.persistence.ProfissionalRepository;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -26,6 +28,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 class SchedulingIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
+    @Autowired ProfissionalRepository profissionais;
 
     @Test
     void criaAgendamentoComSucessoEListaPorPeriodo() throws Exception {
@@ -170,6 +173,9 @@ class SchedulingIntegrationTest {
     }
 
     private Map<String, Object> request(LocalDateTime inicio, UUID clienteId, UUID profissionalId) {
+        if (!profissionais.existsById(profissionalId)) {
+            profissionais.saveAndFlush(new Profissional(profissionalId, "Profissional de teste", "Barbeiro"));
+        }
         return Map.of("inicio", inicio, "fim", inicio.plusHours(1), "profissionalId", profissionalId,
                 "clienteId", clienteId, "servicoId", UUID.randomUUID());
     }

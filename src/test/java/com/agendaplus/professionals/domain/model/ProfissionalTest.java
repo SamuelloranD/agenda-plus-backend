@@ -19,6 +19,7 @@ class ProfissionalTest {
         var profissional = new Profissional(ID, " Ana ", " Corte ");
 
         assertThat(profissional.getId()).isEqualTo(ID);
+        assertThat(profissional.isAtivo()).isTrue();
         assertThat(profissional.getNome()).isEqualTo("Ana");
         assertThat(profissional.getEspecialidade()).isEqualTo("Corte");
 
@@ -26,6 +27,18 @@ class ProfissionalTest {
 
         assertThat(profissional.getNome()).isEqualTo("Beatriz");
         assertThat(profissional.getEspecialidade()).isEqualTo("Manicure");
+    }
+
+    @Test
+    void alteraStatusSemApagarHorarios() {
+        var profissional = new Profissional(ID, "Ana", "Corte");
+        var segunda = horario(DayOfWeek.MONDAY);
+        profissional.substituirHorarios(List.of(segunda));
+
+        profissional.definirAtivo(false);
+
+        assertThat(profissional.isAtivo()).isFalse();
+        assertThat(profissional.getHorariosTrabalho()).containsExactly(segunda);
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.agendaplus.professionals.application.dto.ProfissionalResponse;
 import com.agendaplus.scheduling.application.dto.HorarioDisponivelResponse;
 import com.agendaplus.scheduling.application.usecase.ListarHorariosDisponiveisUseCase;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -55,4 +56,11 @@ public class ProfissionalController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluir(@PathVariable UUID id) { service.excluir(id); }
+
+    public record AlterarStatusRequest(@NotNull Boolean ativo) {}
+
+    @PatchMapping("/{id}/status")
+    public ProfissionalResponse alterarStatus(@PathVariable UUID id, @Valid @RequestBody AlterarStatusRequest request) {
+        return ProfissionalResponse.from(service.alterarStatus(id, request.ativo()));
+    }
 }

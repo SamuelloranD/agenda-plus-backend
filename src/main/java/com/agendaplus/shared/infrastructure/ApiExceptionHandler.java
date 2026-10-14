@@ -2,6 +2,7 @@ package com.agendaplus.shared.infrastructure;
 
 import com.agendaplus.identity.domain.exception.EmailJaCadastradoException;
 import com.agendaplus.professionals.application.ProfissionalNaoEncontradoException;
+import com.agendaplus.professionals.application.ProfissionalComAgendamentosException;
 import com.agendaplus.identity.application.cliente.ClienteNaoEncontradoException;
 import com.agendaplus.services.application.ServicoNaoEncontradoException;
 
@@ -24,6 +25,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ProfissionalNaoEncontradoException.class)
     ProblemDetail profissionalNaoEncontrado(ProfissionalNaoEncontradoException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(ProfissionalComAgendamentosException.class)
+    ProblemDetail profissionalComAgendamentos(ProfissionalComAgendamentosException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
     @ExceptionHandler(ClienteNaoEncontradoException.class)

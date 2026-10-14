@@ -40,6 +40,10 @@ public class SecurityConfiguration {
                                 "/profissionais", "/profissionais/{id}",
                                 "/profissionais/{id}/horarios-disponiveis").permitAll()
                         .requestMatchers(HttpMethod.GET, "/agendamentos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/profissionais").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/profissionais/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/profissionais/{id}/status").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/profissionais/{id}").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, exception) -> {
                     response.setStatus(401);

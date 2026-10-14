@@ -36,6 +36,7 @@ public class ListarHorariosDisponiveisUseCase {
     @Transactional(readOnly = true)
     public List<HorarioDisponivelResponse> executar(UUID profissionalId, LocalDate data, UUID servicoId) {
         var profissional = profissionais.findById(profissionalId).orElseThrow(ProfissionalNaoEncontradoException::new);
+        if (!profissional.isAtivo()) return List.of();
         var servico = servicos.findById(servicoId).orElseThrow(ServicoNaoEncontradoException::new);
         LocalDateTime inicioDia = data.atStartOfDay();
         LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
